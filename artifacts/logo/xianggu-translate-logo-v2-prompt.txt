@@ -1,0 +1,9 @@
+Use case: logo-brand
+Asset type: browser extension logo and app icon
+Primary request: Design a refined minimalist geometric logo symbol for “香菇翻译”, expressing translation, language connection, and mycelium growth through two responsive paths and a restrained bidirectional arrow.
+Style/medium: flat vector appearance, geometric construction, strong negative space, clean single-weight curves, premium modern software brand.
+Composition/framing: centered isolated symbol, no enclosing box, readable at 16px and 32px, paired with a separate Chinese wordmark.
+Color palette: deep mycelium green #005133, spore lime #D9ED78, dark ink #131E17.
+Text (verbatim): “香菇翻译” only in the separate wordmark; no text inside the symbol.
+Constraints: one core metaphor, two colors plus dark ink, simple silhouette, scalable vector geometry, wordmark separate from symbol.
+Avoid: literal mushroom illustration, mushroom stem, spots, mascot, decorative details, English subtitle, rounded-square container, gradients, shadows, textures, 3D, mockup, generated placeholder text.

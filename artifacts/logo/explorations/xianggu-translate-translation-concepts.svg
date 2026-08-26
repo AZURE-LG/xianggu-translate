@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="820" viewBox="0 0 1200 820" role="img" aria-labelledby="title desc">
+  <title id="title">香菇翻译主题 Logo 概念探索</title>
+  <desc id="desc">围绕翻译主题的四个现代简约 Logo 方向：双向对话、字符桥、折页互译和双栏译窗。</desc>
+  <rect width="1200" height="820" fill="#F0FDF1"/>
+  <g font-family="Microsoft YaHei UI, PingFang SC, Noto Sans CJK SC, sans-serif">
+    <text x="54" y="66" fill="#131E17" font-size="30" font-weight="700">香菇翻译</text>
+    <text x="54" y="96" fill="#566500" font-size="13" font-weight="600" letter-spacing="3">翻译主题 · LOGO CONCEPTS</text>
+
+    <g transform="translate(40 130)">
+      <rect width="540" height="300" rx="28" fill="#FFFFFF" stroke="#D9E6DA" stroke-width="2"/>
+      <text x="34" y="47" fill="#005133" font-size="18" font-weight="700">01 · 双向对话</text>
+      <text x="34" y="73" fill="#707972" font-size="13">把两种语言放进一场对话</text>
+      <g transform="translate(144 95)">
+        <path d="M0 45C0 20 20 0 45 0h55c25 0 45 20 45 45v14c0 25-20 45-45 45H67l-25 22v-22H45C20 104 0 84 0 59V45Z" fill="#005133"/>
+        <path d="M103 80c0-23 18-41 41-41h48c23 0 41 18 41 41v10c0 23-18 41-41 41h-20l-20 18v-18h-8c-23 0-41-18-41-41V80Z" fill="#D9ED78"/>
+        <text x="40" y="72" fill="#FFFFFF" font-size="43" font-weight="700">A</text>
+        <text x="153" y="103" fill="#005133" font-size="38" font-weight="700">文</text>
+        <path d="M96 76h34m-10-10 10 10-10 10" fill="none" stroke="#131E17" stroke-linecap="round" stroke-linejoin="round" stroke-width="6"/>
+      </g>
+      <text x="34" y="263" fill="#404942" font-size="13">关键词：语言、沟通、友好、即时</text>
+    </g>
+
+    <g transform="translate(620 130)">
+      <rect width="540" height="300" rx="28" fill="#FFFFFF" stroke="#D9E6DA" stroke-width="2"/>
+      <text x="34" y="47" fill="#005133" font-size="18" font-weight="700">02 · 字符桥</text>
+      <text x="34" y="73" fill="#707972" font-size="13">用 A 与 文 的映射表达翻译</text>
+      <g transform="translate(164 98)">
+        <circle cx="52" cy="67" r="52" fill="#005133"/>
+        <circle cx="192" cy="67" r="52" fill="#D9ED78"/>
+        <text x="28" y="84" fill="#FFFFFF" font-size="45" font-weight="700">A</text>
+        <text x="164" y="96" fill="#005133" font-size="42" font-weight="700">文</text>
+        <path d="M93 67h58" fill="none" stroke="#131E17" stroke-linecap="round" stroke-width="7"/>
+        <path d="m101 55-12 12 12 12m42-24 12 12-12 12" fill="none" stroke="#131E17" stroke-linecap="round" stroke-linejoin="round" stroke-width="6"/>
+      </g>
+      <text x="34" y="263" fill="#404942" font-size="13">关键词：清晰、工具感、识别度、国际化</text>
+    </g>
+
+    <g transform="translate(40 480)">
+      <rect width="540" height="300" rx="28" fill="#FFFFFF" stroke="#D9E6DA" stroke-width="2"/>
+      <text x="34" y="47" fill="#005133" font-size="18" font-weight="700">03 · 折页互译</text>
+      <text x="34" y="73" fill="#707972" font-size="13">像翻开两页语言文档一样完成转换</text>
+      <g transform="translate(150 95)">
+        <path d="M0 20 32 0h96l30 20v113l-30 20H32L0 133Z" fill="#005133"/>
+        <path d="M160 20 192 0h96l30 20v113l-30 20h-96l-32-20Z" fill="#D9ED78"/>
+        <path d="m128 0 32 20v113l-32 20" fill="#F0FDF1"/>
+        <path d="M35 51h76M35 72h58M35 93h65M195 51h76M195 72h58M195 93h65" stroke="#F0FDF1" stroke-linecap="round" stroke-width="7"/>
+        <path d="M133 67h54m-11-11 11 11-11 11" fill="none" stroke="#131E17" stroke-linecap="round" stroke-linejoin="round" stroke-width="6"/>
+      </g>
+      <text x="34" y="263" fill="#404942" font-size="13">关键词：文档、准确、可靠、专业</text>
+    </g>
+
+    <g transform="translate(620 480)">
+      <rect width="540" height="300" rx="28" fill="#FFFFFF" stroke="#D9E6DA" stroke-width="2"/>
+      <text x="34" y="47" fill="#005133" font-size="18" font-weight="700">04 · 双栏译窗</text>
+      <text x="34" y="73" fill="#707972" font-size="13">把原文与译文放进同一个工作窗口</text>
+      <g transform="translate(137 96)">
+        <rect x="0" y="0" width="270" height="138" rx="18" fill="#FFFFFF" stroke="#005133" stroke-width="8"/>
+        <path d="M135 4v130" stroke="#D9E6DA" stroke-width="5"/>
+        <text x="26" y="36" fill="#005133" font-size="17" font-weight="700">原文</text>
+        <text x="165" y="36" fill="#566500" font-size="17" font-weight="700">译文</text>
+        <path d="M25 63h82M25 83h65M25 103h92M163 63h82M163 83h66M163 103h92" stroke="#131E17" stroke-linecap="round" stroke-width="6"/>
+        <path d="M118 69h35m-10-10 10 10-10 10" fill="none" stroke="#D9ED78" stroke-linecap="round" stroke-linejoin="round" stroke-width="6"/>
+      </g>
+      <text x="34" y="263" fill="#404942" font-size="13">关键词：浏览器、效率、结构、工作流</text>
+    </g>
+  </g>
+</svg>

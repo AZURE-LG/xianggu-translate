@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 208 208" role="img" aria-labelledby="title desc">
+  <title id="title">香菇翻译图标</title>
+  <desc id="desc">简约的菌盖、孢子和双向翻译箭头图标。</desc>
+  <rect x="20" y="20" width="168" height="168" rx="44" fill="#005133"/>
+  <path d="M50 97c0-36 26-61 54-61s54 25 54 61H50Z" fill="#D9ED78"/>
+  <circle cx="78" cy="66" r="7" fill="#005133"/>
+  <circle cx="104" cy="52" r="6" fill="#005133"/>
+  <circle cx="131" cy="70" r="8" fill="#005133"/>
+  <path d="M80 97h48v43c0 14-11 25-25 25h-1c-12 0-22-10-22-22V97Z" fill="#F0FDF1"/>
+  <path d="M90 116h28l-8-8m8 8-8 8M118 139H90l8-8m-8 8 8 8" fill="none" stroke="#005133" stroke-linecap="round" stroke-linejoin="round" stroke-width="5"/>
+  <path d="M59 145c10 18 27 29 47 29 17 0 33-8 43-22" fill="none" stroke="#D9ED78" stroke-linecap="round" stroke-width="5" opacity=".9"/>
+</svg>

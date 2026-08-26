@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="920" height="220" viewBox="0 0 920 220" role="img" aria-labelledby="title desc">
+  <title id="title">香菇翻译 Logo</title>
+  <desc id="desc">深绿色菌盖与黄绿色孢子组成的简约图标，连接中文品牌字标“香菇翻译”。</desc>
+  <g transform="translate(20 26)">
+    <rect width="168" height="168" rx="44" fill="#005133"/>
+    <path d="M30 77C30 41 56 16 84 16s54 25 54 61H30Z" fill="#D9ED78"/>
+    <circle cx="58" cy="46" r="7" fill="#005133"/>
+    <circle cx="84" cy="32" r="6" fill="#005133"/>
+    <circle cx="111" cy="50" r="8" fill="#005133"/>
+    <path d="M60 77h48v43c0 14-11 25-25 25h-1c-12 0-22-10-22-22V77Z" fill="#F0FDF1"/>
+    <path d="M70 96h28l-8-8m8 8-8 8M98 119H70l8-8m-8 8 8 8" fill="none" stroke="#005133" stroke-linecap="round" stroke-linejoin="round" stroke-width="5"/>
+    <path d="M39 125c10 18 27 29 47 29 17 0 33-8 43-22" fill="none" stroke="#D9ED78" stroke-linecap="round" stroke-width="5" opacity=".9"/>
+  </g>
+  <g font-family="Microsoft YaHei UI, PingFang SC, Noto Sans CJK SC, sans-serif">
+    <text x="236" y="113" fill="#131E17" font-size="58" font-weight="700" letter-spacing="2">香菇<tspan fill="#005133">翻译</tspan></text>
+    <path d="M238 143h302" fill="none" stroke="#D9ED78" stroke-linecap="round" stroke-width="8"/>
+    <text x="238" y="177" fill="#566500" font-size="15" font-weight="600" letter-spacing="4">XIANGGU TRANSLATE</text>
+  </g>
+</svg>

@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 208 208" role="img" aria-labelledby="title desc">
+  <title id="title">香菇翻译抽象路径图标</title>
+  <desc id="desc">由两条互相回应的几何路径组成的翻译连接标志。</desc>
+  <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M34 105C34 62 66 32 108 32c31 0 56 14 70 37" stroke="#005133" stroke-width="20"/>
+    <path d="M174 103c0 43-32 73-74 73-31 0-56-14-70-37" stroke="#D9ED78" stroke-width="20"/>
+  </g>
+  <path d="M78 103h52" stroke="#131E17" stroke-linecap="round" stroke-width="8"/>
+  <path d="m121 92 12 11-12 11M87 114l-12-11 12-11" fill="none" stroke="#131E17" stroke-linecap="round" stroke-linejoin="round" stroke-width="7"/>
+</svg>
