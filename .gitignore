@@ -1,0 +1,6 @@
+.signing/
+*.pem
+node_modules/
+debug.log
+extension.crx
+extension.pem
