@@ -1,0 +1,277 @@
+<!doctype html>
+<html class="wa-theme-default wa-light" lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>香菇翻译</title>
+    <link rel="stylesheet" href="vendor/webawesome.css">
+    <link rel="stylesheet" href="css/panel.css">
+  </head>
+  <body data-mode="popup">
+    <div class="app-shell">
+      <header class="topbar">
+        <div class="brand" aria-label="香菇翻译">
+          <span class="brand-name">香菇翻译</span>
+        </div>
+
+        <div class="topbar-actions">
+          <button id="sidePanelButton" class="icon-button" type="button" aria-label="在侧边栏中打开">
+            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M4 5h16v14H4zM15 5v14"></path>
+            </svg>
+          </button>
+
+          <button id="themeToggleButton" class="icon-button theme-toggle-button" type="button" aria-label="切换深色主题">
+            <svg class="icon theme-moon-icon" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M20 15.2A8.5 8.5 0 0 1 8.8 4 8.5 8.5 0 1 0 20 15.2Z"></path>
+            </svg>
+            <svg class="icon theme-sun-icon" viewBox="0 0 24 24" aria-hidden="true">
+              <circle cx="12" cy="12" r="3.5"></circle>
+              <path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"></path>
+            </svg>
+          </button>
+
+          <button id="settingsButton" class="icon-button" type="button" aria-label="打开设置">
+            <svg class="icon settings-icon" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M4 7h10M18 7h2M4 17h2M10 17h10"></path>
+              <circle cx="16" cy="7" r="2"></circle>
+              <circle cx="8" cy="17" r="2"></circle>
+            </svg>
+            <svg class="icon back-icon" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="m15 18-6-6 6-6"></path>
+            </svg>
+          </button>
+        </div>
+      </header>
+
+      <main class="content">
+        <p id="status" class="status" role="status" aria-live="polite"></p>
+
+        <section id="translator" class="workspace translator-workspace compact-translator">
+          <div class="compact-language-row" aria-label="翻译语言">
+            <label class="compact-language-control">
+              <span class="visually-hidden">源语言</span>
+              <wa-select id="quickSourceLanguage" size="s" appearance="filled" aria-label="选择输入语言"></wa-select>
+            </label>
+
+            <button id="swapLanguagesButton" class="swap-button compact-swap-button" type="button" aria-label="交换语言" disabled>
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M7 7h11l-3-3M17 17H6l3 3"></path>
+              </svg>
+            </button>
+
+            <label class="compact-language-control">
+              <span class="visually-hidden">目标语言</span>
+              <wa-select id="quickTargetLanguage" size="s" appearance="filled" aria-label="选择目标语言"></wa-select>
+            </label>
+          </div>
+
+          <section class="compact-translation-field compact-source-field" aria-labelledby="sourceFieldTitle">
+            <div class="compact-field-heading">
+              <span class="compact-heading-main">
+                <strong id="sourceFieldTitle">原文</strong>
+                <span id="detectedLanguageBadge" class="detected-language" hidden></span>
+              </span>
+              <span class="compact-heading-actions">
+                <button id="pasteInputButton" class="compact-text-action" type="button" aria-label="从剪贴板粘贴">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5h6M9 3h6v4H9zM7 5H5v16h14V5h-2"></path></svg>
+                  <span>粘贴</span>
+                </button>
+                <button id="clearInputButton" class="compact-icon-action" type="button" aria-label="清空原文" hidden>
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m7 7 10 10M17 7 7 17"></path></svg>
+                </button>
+              </span>
+            </div>
+            <label class="visually-hidden" for="input">输入原文</label>
+            <textarea id="input" rows="5" placeholder="粘贴或输入需要翻译的内容…" spellcheck="false" aria-describedby="charCount"></textarea>
+            <div class="compact-source-meta">
+              <span id="autoModeHint" class="auto-mode-hint visually-hidden">输入后自动翻译</span>
+              <span id="charCount" class="char-count">0 / 5000</span>
+            </div>
+          </section>
+
+          <button id="primaryButton" class="translate-button compact-translate-button" type="button" aria-label="开始翻译">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h8M8 3v2M6 5c.6 3.1 2.4 5.6 5.2 7M10.5 5c-.7 2.5-2.3 4.6-4.8 6.2M13 19l4-10 4 10M14.5 15h5"></path></svg>
+            <span id="primaryButtonLabel">翻译</span>
+            <span class="compact-shortcut">Ctrl ↵</span>
+          </button>
+
+          <section class="compact-translation-field compact-result-field" aria-labelledby="resultFieldTitle">
+            <div class="compact-field-heading">
+              <span class="compact-heading-main">
+                <strong id="resultFieldTitle">译文</strong>
+                <span class="result-state" aria-hidden="true"></span>
+              </span>
+              <span class="compact-heading-actions">
+                <button id="retryButton" class="compact-icon-action" type="button" aria-label="重新翻译" title="重新翻译">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 1 0-2.35 5.65"></path><path d="M20 4v7h-7"></path></svg>
+                </button>
+                <button id="copyButton" class="compact-copy-action" type="button" aria-label="复制译文">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="10" height="11" rx="1"></rect><path d="M15 9V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h4"></path></svg>
+                  <span id="copyButtonLabel">复制</span>
+                </button>
+              </span>
+            </div>
+            <div id="output" class="output" tabindex="0" aria-label="翻译结果"></div>
+          </section>
+
+          <footer class="compact-model-bar">
+            <span>使用模型</span>
+            <button id="modelShortcutButton" class="compact-model-button" type="button" aria-label="修改使用模型">
+              <span id="modelShortcutLabel">当前模型</span>
+              <svg viewBox="0 0 16 16" aria-hidden="true"><path d="m4 6 4 4 4-4"></path></svg>
+            </button>
+          </footer>
+        </section>
+
+        <section id="settings" class="workspace settings-workspace" hidden>
+          <form id="settingsForm" autocomplete="off">
+            <header class="settings-heading">
+              <span class="settings-heading-copy">
+                <h1 id="settingsTitle">开始连接</h1>
+                <p id="settingsIntro">连接你自己的模型服务，不创建新账号。</p>
+              </span>
+              <span class="settings-launch-actions">
+                <button id="openOptionsButton" class="settings-launch-action" type="button">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h14v16H5zM8 8h8M8 12h8M8 16h5"></path></svg>
+                  <span>页面设置</span>
+                </button>
+              </span>
+            </header>
+
+            <div class="settings-grid">
+            <section class="settings-card connection-card" aria-labelledby="connectionTitle">
+              <h2 id="connectionTitle">连接服务</h2>
+
+              <label class="field">
+                <span class="field-label">服务商 <small>SERVICE PROVIDER</small></span>
+                <select id="provider"></select>
+              </label>
+
+              <label class="field">
+                <span class="field-label">服务地址 <small>BASE URL</small></span>
+                <input id="baseUrl" type="text" spellcheck="false" placeholder="https://api.example.com/v1">
+              </label>
+              <p id="baseUrlWarning" class="field-warning" hidden>该地址使用 HTTP，输入内容和密钥会明文传输。</p>
+
+              <label class="field">
+                <span class="field-label field-label-row">
+                  <span>密钥 <small>API KEY</small></span>
+                  <span class="inline-actions">
+                    <button id="toggleApiKey" class="text-action" type="button">显示</button>
+                    <button id="clearApiKey" class="text-action danger-text" type="button">清空</button>
+                  </span>
+                </span>
+                <input id="apiKey" class="technical-input" type="password" spellcheck="false" autocomplete="new-password" placeholder="sk-••••••••">
+              </label>
+
+              <div class="field">
+                <label class="field-label" for="model">模型 <small>MODEL NAME</small></label>
+                <span class="model-row">
+                  <span class="model-input-control">
+                    <input id="model" class="technical-input" type="text" spellcheck="false" placeholder="输入或选择模型名" aria-controls="modelPickerList" aria-autocomplete="list">
+                    <button id="modelPickerButton" class="model-picker-button" type="button" aria-label="打开模型下拉列表" aria-haspopup="listbox" aria-controls="modelPickerList" aria-expanded="false" disabled>
+                      <svg viewBox="0 0 16 16" aria-hidden="true"><path d="m4 6 4 4 4-4"></path></svg>
+                    </button>
+                    <span id="modelPickerList" class="model-picker-list" role="listbox" aria-label="可用模型" hidden></span>
+                  </span>
+                  <wa-button id="loadModelButton" class="compact-button" variant="neutral" appearance="filled-outlined" size="s">获取模型</wa-button>
+                </span>
+              </div>
+              <datalist id="modelOptions"></datalist>
+
+              <wa-button id="testTranslationButton" class="outline-button" variant="brand" appearance="outlined" size="s">测试翻译</wa-button>
+            </section>
+
+            <section class="settings-card preferences-card" aria-labelledby="preferencesTitle">
+              <h2 id="preferencesTitle">翻译偏好</h2>
+
+              <label class="field">
+                <span class="field-label">默认目标语言 <small>DEFAULT TARGET</small></span>
+                <select id="targetLanguage"></select>
+              </label>
+
+              <label class="field">
+                <span class="field-label">自定义目标语言 <small>CUSTOM TARGET</small></span>
+                <input id="customTargetLanguage" type="text" maxlength="40" placeholder="例如：古典拉丁语">
+              </label>
+
+              <div class="preference-row">
+                <span>自动翻译</span>
+                <wa-switch id="settingsAutoTranslate" size="s" aria-label="自动翻译"></wa-switch>
+              </div>
+
+              <div class="field">
+                <span class="field-label">颜色预设 <small>COLOR PRESET</small></span>
+                <select id="colorPreset" hidden aria-hidden="true" tabindex="-1">
+                  <option value="graphite">石墨</option>
+                  <option value="forest">森林</option>
+                  <option value="lake">湖景</option>
+                  <option value="sunset">晚霞</option>
+                  <option value="lavender">薰衣草</option>
+                </select>
+                <div id="colorPresetControl" class="color-preset-control" role="radiogroup" aria-label="颜色预设">
+                  <button class="color-preset" type="button" role="radio" data-color-preset="graphite">
+                    <span class="preset-swatches" aria-hidden="true"><i></i><i></i></span>
+                    <span>石墨</span>
+                  </button>
+                  <button class="color-preset" type="button" role="radio" data-color-preset="forest">
+                    <span class="preset-swatches" aria-hidden="true"><i></i><i></i></span>
+                    <span>森林</span>
+                  </button>
+                  <button class="color-preset" type="button" role="radio" data-color-preset="lake">
+                    <span class="preset-swatches" aria-hidden="true"><i></i><i></i></span>
+                    <span>湖景</span>
+                  </button>
+                  <button class="color-preset" type="button" role="radio" data-color-preset="sunset">
+                    <span class="preset-swatches" aria-hidden="true"><i></i><i></i></span>
+                    <span>晚霞</span>
+                  </button>
+                  <button class="color-preset" type="button" role="radio" data-color-preset="lavender">
+                    <span class="preset-swatches" aria-hidden="true"><i></i><i></i></span>
+                    <span>薰衣草</span>
+                  </button>
+                </div>
+              </div>
+
+              <div class="field">
+                <span class="field-label">明暗主题 <small>APPEARANCE</small></span>
+                <select id="theme" hidden aria-hidden="true" tabindex="-1">
+                  <option value="system">跟随系统</option>
+                  <option value="light">浅色</option>
+                  <option value="dark">深色</option>
+                </select>
+                <div id="themeControl" class="segmented-control" role="radiogroup" aria-label="主题">
+                  <button class="segment" type="button" role="radio" data-theme-choice="system">跟随系统</button>
+                  <button class="segment" type="button" role="radio" data-theme-choice="light">浅色</button>
+                  <button class="segment" type="button" role="radio" data-theme-choice="dark">深色</button>
+                </div>
+              </div>
+            </section>
+
+            <aside class="privacy-note">
+              <svg class="privacy-icon" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M12 3 5 6v5c0 4.6 2.9 8 7 10 4.1-2 7-5.4 7-10V6l-7-3Z"></path>
+                <path d="M12 10v5M12 7.5v.5"></path>
+              </svg>
+              <p>API Key 与待翻译文本只会发送到你配置的服务商地址。扩展不保存持久翻译历史；当前草稿和最近结果只保留在浏览器会话中。</p>
+            </aside>
+            </div>
+
+            <footer class="settings-actions">
+              <wa-button id="saveSettingsButton" class="save-button" variant="brand" appearance="accent" size="l" type="submit">保存并开始翻译</wa-button>
+            </footer>
+          </form>
+        </section>
+      </main>
+    </div>
+
+    <wa-tooltip id="sidePanelTooltip" for="sidePanelButton" placement="bottom">在侧边栏中打开</wa-tooltip>
+    <wa-tooltip id="settingsTooltip" for="settingsButton" placement="bottom">打开设置</wa-tooltip>
+    <wa-tooltip for="swapLanguagesButton" placement="bottom">交换输入与输出语言</wa-tooltip>
+    <wa-tooltip for="clearInputButton" placement="left">清空原文与译文</wa-tooltip>
+
+    <script type="module" src="vendor/webawesome.js"></script>
+    <script type="module" src="js/app.js"></script>
+  </body>
+</html>
