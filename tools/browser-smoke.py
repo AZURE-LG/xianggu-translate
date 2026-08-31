@@ -12,18 +12,44 @@ from playwright.async_api import async_playwright
 ROOT = Path(__file__).resolve().parents[1]
 EXTENSION = ROOT / "extension"
 ARTIFACTS = ROOT / "artifacts"
-CHROMIUM = Path(os.environ["LOCALAPPDATA"]) / "ms-playwright" / "chromium-1148" / "chrome-win" / "chrome.exe"
+
+
+def find_chromium():
+    override = os.environ.get("PLAYWRIGHT_CHROMIUM")
+    if override:
+        executable = Path(override)
+        if executable.is_file():
+            return executable
+
+    playwright_root = Path(os.environ["LOCALAPPDATA"]) / "ms-playwright"
+    for installation in sorted(playwright_root.glob("chromium-*"), reverse=True):
+        for relative_path in ("chrome-win64/chrome.exe", "chrome-win/chrome.exe"):
+            executable = installation / relative_path
+            if executable.is_file():
+                return executable
+
+    for executable in (
+        Path("C:/Program Files/Google/Chrome/Application/chrome.exe"),
+        Path("C:/Program Files (x86)/Google/Chrome/Application/chrome.exe"),
+        Path("C:/Program Files/Microsoft/Edge/Application/msedge.exe"),
+        Path("C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe"),
+    ):
+        if executable.is_file():
+            return executable
+
+    raise FileNotFoundError("未找到可用的 Chromium、Chrome 或 Edge。")
 
 
 class MockHandler(BaseHTTPRequestHandler):
     requests = []
     sync_document = None
+    collections = {"/", "/webdav/"}
 
     def send_cors(self, content_type="application/json; charset=utf-8", status=200):
         self.send_response(status)
         self.send_header("Access-Control-Allow-Origin", "*")
-        self.send_header("Access-Control-Allow-Headers", "Authorization, Content-Type")
-        self.send_header("Access-Control-Allow-Methods", "GET, POST, PUT, OPTIONS")
+        self.send_header("Access-Control-Allow-Headers", "Authorization, Content-Type, Depth")
+        self.send_header("Access-Control-Allow-Methods", "GET, POST, PUT, PROPFIND, MKCOL, OPTIONS")
         self.send_header("Content-Type", content_type)
         self.end_headers()
 
@@ -32,7 +58,7 @@ class MockHandler(BaseHTTPRequestHandler):
 
     def do_GET(self):
         MockHandler.requests.append(("GET", self.path))
-        if self.path == "/webdav/config.json":
+        if self.path == "/webdav/xianggu-translate/config.json":
             if MockHandler.sync_document is None:
                 self.send_cors(status=404)
                 return
@@ -104,10 +130,33 @@ class MockHandler(BaseHTTPRequestHandler):
             return
 
     def do_PUT(self):
+        parent = self.path.rsplit("/", 1)[0] + "/"
+        if parent not in MockHandler.collections:
+            MockHandler.requests.append(("PUT", self.path, 409))
+            self.send_cors(status=409)
+            return
         length = int(self.headers.get("Content-Length", "0"))
         MockHandler.sync_document = json.loads(self.rfile.read(length) or b"{}")
         MockHandler.requests.append(("PUT", self.path, MockHandler.sync_document))
         self.send_cors(status=204)
+
+    def do_MKCOL(self):
+        path = self.path if self.path.endswith("/") else f"{self.path}/"
+        parent = path.rstrip("/").rsplit("/", 1)[0] + "/"
+        if path in MockHandler.collections:
+            self.send_cors(status=405)
+            return
+        if parent not in MockHandler.collections:
+            self.send_cors(status=409)
+            return
+        MockHandler.collections.add(path)
+        MockHandler.requests.append(("MKCOL", path))
+        self.send_cors(status=201)
+
+    def do_PROPFIND(self):
+        path = self.path if self.path.endswith("/") else f"{self.path}/"
+        MockHandler.requests.append(("PROPFIND", path))
+        self.send_cors(status=207 if path in MockHandler.collections else 404)
 
     def log_message(self, *args):
         return
@@ -125,7 +174,7 @@ async def main():
         "version": 2,
         "provider": "ollama",
         "baseUrl": "http://localhost:11434/v1",
-        "apiKey": "",
+        "apiKey": "smoke-api-key",
         "model": "mock-chat",
         "sourceLanguage": {"type": "auto", "code": "auto", "label": "自动检测"},
         "targetLanguage": {"type": "preset", "code": "en", "label": "英语"},
@@ -177,8 +226,11 @@ async def main():
     async def webdav_test_succeeded():
         return "WebDAV 连接成功" in (await options_page.text_content("#status"))
 
-    async def webdav_sync_succeeded():
-        return "已将本机设置上传到 WebDAV" in (await options_page.text_content("#status"))
+    async def webdav_upload_succeeded():
+        return "已将本机配置上传到 WebDAV" in (await options_page.text_content("#status"))
+
+    async def webdav_download_succeeded():
+        return "已下载远端配置并覆盖本机配置" in (await options_page.text_content("#status"))
 
     async def component_value(selector):
         return await page.locator(selector).evaluate("element => element.value")
@@ -200,9 +252,10 @@ async def main():
 
     with tempfile.TemporaryDirectory(prefix="xianggu-smoke-") as profile:
         async with async_playwright() as playwright:
+            chromium = find_chromium()
             context = await playwright.chromium.launch_persistent_context(
                 profile,
-                executable_path=str(CHROMIUM),
+                executable_path=str(chromium),
                 headless=True,
                 viewport={"width": 352, "height": 450},
                 args=[
@@ -332,6 +385,11 @@ async def main():
                 await page.click("#settingsButton")
                 assert await page.locator("#settings").is_visible()
                 assert not await page.locator("#translator").is_visible()
+                await page.click("#themeToggleButton")
+                assert await page.locator("#settings").is_visible()
+                assert not await page.locator("#translator").is_visible()
+                await page.click("#themeToggleButton")
+                assert await page.locator("#settings").is_visible()
                 assert await page.locator("#settingsAutoTranslate").evaluate("element => element.checked") is False
                 assert await page.get_attribute('[data-theme-choice="light"]', "aria-checked") == "true"
                 await page.fill("#model", "")
@@ -437,16 +495,33 @@ async def main():
                 await options_page.click('[data-theme-choice="light"]')
                 await options_page.click('.color-preset[data-color-preset="graphite"]')
                 await options_page.click("#webDavEnabled")
-                await options_page.fill("#webDavUrl", "http://localhost:11434/webdav/config.json")
+                await options_page.fill("#webDavUrl", "http://localhost:11434/webdav")
                 await options_page.fill("#webDavUsername", "smoke-user")
                 await options_page.fill("#webDavPassword", "smoke-password")
                 await options_page.click("#testWebDavButton")
                 await wait_until(webdav_test_succeeded)
-                await options_page.click("#syncWebDavButton")
-                await wait_until(webdav_sync_succeeded)
+                await options_page.click("#webDavIncludeApiKey")
+                await options_page.click("#uploadWebDavButton")
+                await wait_until(webdav_upload_succeeded)
                 assert MockHandler.sync_document is not None
-                assert "apiKey" not in MockHandler.sync_document["config"]
+                assert ("PROPFIND", "/webdav/xianggu-translate/") in MockHandler.requests
+                assert ("PROPFIND", "/webdav/") in MockHandler.requests
+                assert ("MKCOL", "/webdav/xianggu-translate/") in MockHandler.requests
+                assert MockHandler.sync_document["config"]["apiKey"] == "smoke-api-key"
                 assert "webDav" not in MockHandler.sync_document["config"]
+                MockHandler.sync_document["config"]["theme"] = "dark"
+                MockHandler.sync_document["config"]["apiKey"] = "remote-api-key"
+                await options_page.click("#downloadWebDavButton")
+                await wait_until(webdav_download_succeeded)
+                assert (await options_page.evaluate("async () => (await chrome.storage.local.get('config')).config.theme")) == "dark"
+                assert (await options_page.evaluate("async () => (await chrome.storage.local.get('config')).config.apiKey")) == "remote-api-key"
+                await options_page.click("#webDavIncludeApiKey")
+                MockHandler.sync_document["config"]["theme"] = "light"
+                MockHandler.sync_document["config"]["apiKey"] = "ignored-api-key"
+                await options_page.click("#downloadWebDavButton")
+                await wait_until(webdav_download_succeeded)
+                assert (await options_page.evaluate("async () => (await chrome.storage.local.get('config')).config.theme")) == "light"
+                assert (await options_page.evaluate("async () => (await chrome.storage.local.get('config')).config.apiKey")) == "remote-api-key"
                 await options_page.screenshot(path=str(ARTIFACTS / "browser-webdav.png"), full_page=True)
                 await options_page.close()
 

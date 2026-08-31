@@ -4,7 +4,11 @@ import {
   requestTestTranslation,
   requestTranslation,
 } from "./api.js";
-import { syncWebDavConfig, testWebDavConnection } from "./webdav.js";
+import {
+  downloadWebDavConfig,
+  testWebDavConnection,
+  uploadWebDavConfig,
+} from "./webdav.js";
 
 const FIRST_BYTE_TIMEOUT = 20_000;
 const TOTAL_TIMEOUT = 120_000;
@@ -51,8 +55,13 @@ chrome.runtime.onConnect.addListener((port) => {
       return;
     }
 
-    if (message.type === "webdav-sync") {
-      handleWebDavSync(port, message);
+    if (message.type === "webdav-upload") {
+      handleWebDavUpload(port, message);
+      return;
+    }
+
+    if (message.type === "webdav-download") {
+      handleWebDavDownload(port, message);
     }
   });
 
@@ -218,23 +227,42 @@ async function handleWebDavTest(port, message) {
   }
 }
 
-async function handleWebDavSync(port, message) {
-  const { sessionId, requestId, settings, config, modifiedAt } = message;
+async function handleWebDavUpload(port, message) {
+  const { sessionId, requestId, settings, config, modifiedAt, includeApiKey } = message;
   const controller = createSettingsController(sessionId);
   try {
-    const result = await syncWebDavConfig({
+    await uploadWebDavConfig({
       settings,
       config,
       modifiedAt,
+      includeApiKey,
       signal: controller.signal,
     });
-    post(port, requestId, { type: "webdav-sync", result });
+    post(port, requestId, { type: "webdav-upload" });
   } catch (error) {
     post(port, requestId, {
-      type: "webdav-sync-error",
+      type: "webdav-upload-error",
       message: error?.name === "AbortError"
-        ? "WebDAV 同步超时。"
-        : error?.message || "无法连接 WebDAV，请检查地址和网络。",
+        ? "WebDAV 上传超时。"
+        : error?.message || "无法上传到 WebDAV，请检查地址和网络。",
+    });
+  } finally {
+    controller.finish();
+  }
+}
+
+async function handleWebDavDownload(port, message) {
+  const { sessionId, requestId, settings } = message;
+  const controller = createSettingsController(sessionId);
+  try {
+    const document = await downloadWebDavConfig(settings, controller.signal);
+    post(port, requestId, { type: "webdav-download", document });
+  } catch (error) {
+    post(port, requestId, {
+      type: "webdav-download-error",
+      message: error?.name === "AbortError"
+        ? "WebDAV 下载超时。"
+        : error?.message || "无法从 WebDAV 下载，请检查地址和网络。",
     });
   } finally {
     controller.finish();

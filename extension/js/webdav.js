@@ -1,6 +1,8 @@
 import { normalizeBaseUrl } from "./core.js";
 
 export const WEBDAV_SCHEMA_VERSION = 1;
+export const WEBDAV_SYNC_DIRECTORY = "xianggu-translate";
+export const WEBDAV_SYNC_FILE = "config.json";
 
 function encodeBasicAuth(username, password) {
   const bytes = new TextEncoder().encode(`${username}:${password}`);
@@ -22,7 +24,24 @@ export function normalizeWebDavUrl(value) {
   return normalizeBaseUrl(value);
 }
 
-export function createSyncDocument(config, modifiedAt = Date.now()) {
+function webDavRootUrl(value) {
+  const normalized = normalizeWebDavUrl(value);
+  return normalized ? `${normalized}/` : "";
+}
+
+export function webDavSyncFileUrl(value) {
+  const rootUrl = webDavRootUrl(value);
+  return rootUrl
+    ? new URL(`${WEBDAV_SYNC_DIRECTORY}/${WEBDAV_SYNC_FILE}`, rootUrl).href
+    : "";
+}
+
+function webDavSyncDirectoryUrl(value) {
+  const rootUrl = webDavRootUrl(value);
+  return rootUrl ? new URL(`${WEBDAV_SYNC_DIRECTORY}/`, rootUrl).href : "";
+}
+
+export function createSyncDocument(config, modifiedAt = Date.now(), options = {}) {
   return {
     schemaVersion: WEBDAV_SCHEMA_VERSION,
     modifiedAt,
@@ -30,6 +49,7 @@ export function createSyncDocument(config, modifiedAt = Date.now()) {
       version: config.version,
       provider: config.provider,
       baseUrl: config.baseUrl,
+      ...(options.includeApiKey ? { apiKey: config.apiKey } : {}),
       model: config.model,
       sourceLanguage: config.sourceLanguage,
       targetLanguage: config.targetLanguage,
@@ -56,16 +76,72 @@ async function readError(response) {
   }
 }
 
+async function collectionExists(settings, url, signal) {
+  const response = await fetch(url, {
+    method: "PROPFIND",
+    headers: webDavHeaders(settings, { Depth: "0" }),
+    cache: "no-store",
+    signal,
+  });
+  if (response.ok) return true;
+  if (response.status === 404) return false;
+  if (response.status === 405 || response.status === 501) return null;
+  throw webDavError(response.status, await readError(response));
+}
+
+async function requireWebDavRoot(settings, signal) {
+  const rootUrl = webDavRootUrl(settings.url);
+  const exists = await collectionExists(settings, rootUrl, signal);
+  if (exists === true) return rootUrl;
+  if (exists === false) {
+    throw new Error("WebDAV 服务地址不存在，请检查服务地址是否正确。");
+  }
+
+  const response = await fetch(rootUrl, {
+    method: "GET",
+    headers: webDavHeaders(settings),
+    cache: "no-store",
+    signal,
+  });
+  if (response.ok) return rootUrl;
+  throw webDavError(response.status, await readError(response));
+}
+
+async function ensureCollection(settings, url, rootUrl, signal) {
+  const exists = await collectionExists(settings, url, signal);
+  if (exists === true) return;
+
+  const parentUrl = new URL("../", url).href;
+  if (url === rootUrl || !url.startsWith(rootUrl) || !parentUrl.startsWith(rootUrl)) {
+    throw new Error("不能在 WebDAV 服务地址之外创建同步目录，请检查服务地址是否正确。");
+  }
+
+  if (parentUrl === rootUrl) {
+    await requireWebDavRoot(settings, signal);
+  } else {
+    await ensureCollection(settings, parentUrl, rootUrl, signal);
+  }
+  const response = await fetch(url, {
+    method: "MKCOL",
+    headers: webDavHeaders(settings),
+    signal,
+  });
+  if (response.ok || response.status === 405) return;
+  if ((response.status === 404 || response.status === 409) &&
+      await collectionExists(settings, url, signal) === true) return;
+  throw webDavError(response.status, await readError(response));
+}
+
 function webDavError(status, detail = "") {
   let message;
   if (status === 401 || status === 403) {
     message = "WebDAV 鉴权失败，请检查用户名、密码和文件权限。";
   } else if (status === 404) {
-    message = "WebDAV 路径不存在，请先创建目标目录。";
+    message = "WebDAV 路径不存在，请检查服务地址是否正确。";
   } else if (status === 405) {
-    message = "WebDAV 服务不允许此操作，请确认填写的是可读写的文件地址。";
+    message = "WebDAV 服务不允许创建同步目录或写入文件，请检查服务地址和权限。";
   } else if (status === 409) {
-    message = "WebDAV 目标目录不存在，请先创建目录。";
+    message = "WebDAV 服务无法创建内部同步目录，请检查服务地址和权限。";
   } else if (status === 413 || status === 507) {
     message = "WebDAV 存储空间不足或拒绝写入。";
   } else {
@@ -75,29 +151,41 @@ function webDavError(status, detail = "") {
 }
 
 async function putDocument(settings, document, signal) {
-  const response = await fetch(settings.url, {
+  const fileUrl = webDavSyncFileUrl(settings.url);
+  const request = () => fetch(fileUrl, {
     method: "PUT",
     headers: webDavHeaders(settings, { "Content-Type": "application/json; charset=utf-8" }),
     body: JSON.stringify(document, null, 2),
     signal,
   });
+  let response = await request();
+  if (response.status === 404 || response.status === 409) {
+    const rootUrl = webDavRootUrl(settings.url);
+    await ensureCollection(settings, webDavSyncDirectoryUrl(settings.url), rootUrl, signal);
+    response = await request();
+  }
   if (!response.ok) throw webDavError(response.status, await readError(response));
 }
 
 export async function testWebDavConnection(settings, signal) {
-  const response = await fetch(settings.url, {
-    method: "GET",
-    headers: webDavHeaders(settings, { Accept: "application/json" }),
-    cache: "no-store",
-    signal,
-  });
-  if (response.ok || response.status === 404) return true;
-  throw webDavError(response.status, await readError(response));
+  await requireWebDavRoot(settings, signal);
+  return true;
 }
 
-export async function syncWebDavConfig({ settings, config, modifiedAt, signal }) {
-  const localDocument = createSyncDocument(config, modifiedAt);
-  const response = await fetch(settings.url, {
+export async function uploadWebDavConfig({
+  settings,
+  config,
+  modifiedAt,
+  includeApiKey = false,
+  signal,
+}) {
+  const document = createSyncDocument(config, modifiedAt, { includeApiKey });
+  await putDocument(settings, document, signal);
+  return document;
+}
+
+export async function downloadWebDavConfig(settings, signal) {
+  const response = await fetch(webDavSyncFileUrl(settings.url), {
     method: "GET",
     headers: webDavHeaders(settings, { Accept: "application/json" }),
     cache: "no-store",
@@ -105,27 +193,18 @@ export async function syncWebDavConfig({ settings, config, modifiedAt, signal })
   });
 
   if (response.status === 404) {
-    await putDocument(settings, localDocument, signal);
-    return { direction: "uploaded", document: localDocument };
+    throw new Error("WebDAV 同步文件不存在，请先在一台设备上上传本机配置。");
   }
   if (!response.ok) throw webDavError(response.status, await readError(response));
 
-  let remoteDocument;
+  let document;
   try {
-    remoteDocument = parseSyncDocument(await response.json());
+    document = parseSyncDocument(await response.json());
   } catch {
-    remoteDocument = null;
+    document = null;
   }
-  if (!remoteDocument) {
-    throw new Error("WebDAV 文件格式无效，未覆盖本地或远端配置。");
+  if (!document) {
+    throw new Error("WebDAV 文件格式无效，无法下载配置。你可以上传本机配置来替换该文件。");
   }
-
-  if (remoteDocument.modifiedAt > localDocument.modifiedAt) {
-    return { direction: "downloaded", document: remoteDocument };
-  }
-  if (remoteDocument.modifiedAt < localDocument.modifiedAt) {
-    await putDocument(settings, localDocument, signal);
-    return { direction: "uploaded", document: localDocument };
-  }
-  return { direction: "unchanged", document: localDocument };
+  return document;
 }

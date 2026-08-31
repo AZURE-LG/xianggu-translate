@@ -76,9 +76,10 @@ test("设计稿所需的本地字体与核心工作区完整", () => {
     "webDavUrl",
     "webDavUsername",
     "webDavPassword",
-    "webDavAutoSync",
+    "webDavIncludeApiKey",
     "testWebDavButton",
-    "syncWebDavButton",
+    "uploadWebDavButton",
+    "downloadWebDavButton",
   ]) {
     assert.match(html, new RegExp(`\\bid="${id}"`));
   }

@@ -1856,6 +1856,11 @@ input:disabled {
   width: 100%;
 }
 
+.sync-test-action {
+  display: flex;
+  justify-content: flex-end;
+}
+
 .sync-note {
   margin: -2px 0 0;
   color: var(--quiet);

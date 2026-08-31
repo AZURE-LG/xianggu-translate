@@ -36,7 +36,7 @@ const DEFAULT_CONFIG = {
     url: "",
     username: "",
     password: "",
-    autoSync: true,
+    includeApiKey: false,
   },
 };
 
@@ -53,7 +53,6 @@ const state = {
   debounceTimer: null,
   statusTimer: null,
   sessionSaveTimer: null,
-  syncTimer: null,
   models: [],
   lastRequestText: "",
   lastSourceLanguage: "",
@@ -79,9 +78,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   state.ready = true;
   document.body.dataset.ready = "true";
   updateModeControls();
-  if (state.config.webDav?.enabled && state.config.webDav.autoSync) {
-    state.syncTimer = setTimeout(() => syncWebDav({ automatic: true }), 350);
-  }
 });
 
 function collectElements() {
@@ -140,9 +136,10 @@ function collectElements() {
     "webDavUsername",
     "webDavPassword",
     "toggleWebDavPassword",
-    "webDavAutoSync",
+    "webDavIncludeApiKey",
     "testWebDavButton",
-    "syncWebDavButton",
+    "uploadWebDavButton",
+    "downloadWebDavButton",
   ];
   for (const id of ids) {
     elements[id] = document.getElementById(id);
@@ -255,7 +252,8 @@ function bindEvents() {
   elements.webDavEnabled.addEventListener("change", updateWebDavFormState);
   elements.toggleWebDavPassword.addEventListener("click", toggleWebDavPasswordVisibility);
   elements.testWebDavButton.addEventListener("click", testWebDav);
-  elements.syncWebDavButton.addEventListener("click", () => syncWebDav({ manual: true }));
+  elements.uploadWebDavButton.addEventListener("click", uploadWebDav);
+  elements.downloadWebDavButton.addEventListener("click", downloadWebDav);
   elements.settingsForm.addEventListener("submit", saveSettings);
 
   for (const button of elements.themeControl.querySelectorAll("[data-theme-choice]")) {
@@ -279,8 +277,11 @@ function bindEvents() {
   if (globalThis.chrome?.storage?.onChanged) {
     globalThis.chrome.storage.onChanged.addListener(async (changes, area) => {
       if (area !== "local" || !changes.config) return;
-      state.config = normalizeConfig(changes.config.newValue);
-      await renderConfig();
+      const nextConfig = normalizeConfig(changes.config.newValue);
+      if (JSON.stringify(nextConfig) === JSON.stringify(state.config)) return;
+      const preserveSettings = !elements.settings.hidden;
+      state.config = nextConfig;
+      await renderConfig({ preserveSettings });
     });
   }
 
@@ -325,12 +326,25 @@ function normalizeConfig(value) {
     modifiedAt: Number.isFinite(raw.modifiedAt) && raw.modifiedAt > 0 ? raw.modifiedAt : Date.now(),
     webDav: {
       enabled: rawWebDav.enabled === true,
-      url: normalizeWebDavUrl(rawWebDav.url),
+      url: normalizeStoredWebDavUrl(rawWebDav.url),
       username: typeof rawWebDav.username === "string" ? rawWebDav.username.trim().slice(0, 200) : "",
       password: typeof rawWebDav.password === "string" ? rawWebDav.password.slice(0, 500) : "",
-      autoSync: rawWebDav.autoSync !== false,
+      includeApiKey: rawWebDav.includeApiKey === true,
     },
   };
+}
+
+function normalizeStoredWebDavUrl(value) {
+  const normalized = normalizeWebDavUrl(value);
+  if (!normalized) return "";
+
+  const url = new URL(normalized);
+  const segments = url.pathname.split("/").filter(Boolean);
+  if (segments.at(-1)?.toLowerCase() !== "config.json") return normalized;
+
+  segments.pop();
+  url.pathname = segments.length ? `/${segments.join("/")}` : "/";
+  return normalizeWebDavUrl(url.href);
 }
 
 function isConfigComplete(config) {
@@ -342,7 +356,7 @@ function isConfigComplete(config) {
   );
 }
 
-async function renderConfig() {
+async function renderConfig(options = {}) {
   fillSettingsForm(state.config);
   populateQuickLanguageSelectors(state.config.sourceLanguage, state.config.targetLanguage);
   updateAutoModeHint();
@@ -351,7 +365,7 @@ async function renderConfig() {
   updateBaseUrlWarning();
   updateModelShortcut();
 
-  if (state.mode === "options") {
+  if (state.mode === "options" || options.preserveSettings) {
     showSettings();
   } else if (isConfigComplete(state.config)) {
     showTranslator();
@@ -373,7 +387,7 @@ function fillSettingsForm(config) {
   elements.webDavUrl.value = config.webDav?.url ?? "";
   elements.webDavUsername.value = config.webDav?.username ?? "";
   elements.webDavPassword.value = config.webDav?.password ?? "";
-  elements.webDavAutoSync.checked = config.webDav?.autoSync !== false;
+  elements.webDavIncludeApiKey.checked = config.webDav?.includeApiKey === true;
   updateWebDavFormState();
   selectThemeChoice(config.theme ?? "system", false);
   selectColorPreset(config.colorPreset ?? "graphite", false);
@@ -423,7 +437,7 @@ function readWebDavForm() {
     url: normalizeWebDavUrl(elements.webDavUrl.value),
     username: elements.webDavUsername.value.trim().slice(0, 200),
     password: elements.webDavPassword.value.slice(0, 500),
-    autoSync: elements.webDavAutoSync.checked,
+    includeApiKey: elements.webDavIncludeApiKey.checked,
   };
 }
 
@@ -471,7 +485,7 @@ function validateSettings(config, options = {}) {
     return "当前服务商需要 API Key。";
   }
   if (config.webDav.enabled && !config.webDav.url) {
-    return "WebDAV 文件地址无效：公网地址必须使用 HTTPS，且不能包含账号、查询参数或 hash。";
+    return "WebDAV 服务地址无效：公网地址必须使用 HTTPS，且不能包含账号、查询参数或 hash。";
   }
   return "";
 }
@@ -521,7 +535,7 @@ async function requestPermission(baseUrl) {
 
 async function authorizeWebDav(settings) {
   if (!settings.enabled || !settings.url) {
-    updateStatus("请先启用 WebDAV 并填写有效的同步文件地址。", true);
+    updateStatus("请先启用 WebDAV 并填写有效的服务地址。", true);
     return false;
   }
   const granted = await requestPermission(settings.url);
@@ -532,10 +546,6 @@ async function authorizeWebDav(settings) {
 async function saveConfig(config, options = {}) {
   if (options.touch !== false) config.modifiedAt = Date.now();
   await chrome.storage.local.set({ config });
-  if (options.sync !== false && state.ready && config.webDav?.enabled && config.webDav.autoSync) {
-    clearTimeout(state.syncTimer);
-    state.syncTimer = setTimeout(() => syncWebDav({ automatic: true }), 700);
-  }
 }
 
 function updateWebDavFormState() {
@@ -544,9 +554,10 @@ function updateWebDavFormState() {
   elements.webDavUsername.disabled = disabled;
   elements.webDavPassword.disabled = disabled;
   elements.toggleWebDavPassword.disabled = disabled;
-  elements.webDavAutoSync.disabled = disabled;
+  elements.webDavIncludeApiKey.disabled = disabled;
   elements.testWebDavButton.disabled = disabled;
-  elements.syncWebDavButton.disabled = disabled;
+  elements.uploadWebDavButton.disabled = disabled;
+  elements.downloadWebDavButton.disabled = disabled;
 }
 
 async function testWebDav() {
@@ -565,40 +576,46 @@ async function testWebDav() {
   });
 }
 
-async function syncWebDav(options = {}) {
-  const automatic = options.automatic === true;
-  if (!state.config) return;
-  if (state.settingsBusy) {
-    if (automatic) {
-      clearTimeout(state.syncTimer);
-      state.syncTimer = setTimeout(() => syncWebDav({ automatic: true }), 1000);
-    }
-    return;
-  }
-  if (automatic && !state.config.webDav?.enabled) return;
-
-  const settings = automatic ? state.config.webDav : readWebDavForm();
+async function prepareWebDavTransfer() {
+  if (!state.config || state.settingsBusy) return null;
+  const settings = readWebDavForm();
   if (!settings.enabled || !settings.url) {
-    if (!automatic) updateStatus("请先启用 WebDAV 并填写有效的同步文件地址。", true);
-    return;
+    updateStatus("请先启用 WebDAV 并填写有效的服务地址。", true);
+    return null;
   }
-  if (!automatic && !(await authorizeWebDav(settings))) return;
+  if (!(await authorizeWebDav(settings))) return null;
 
-  if (!automatic) {
-    state.config = { ...state.config, webDav: settings };
-    await saveConfig(state.config, { touch: false, sync: false });
-  }
-
+  state.config = { ...state.config, webDav: settings };
+  await saveConfig(state.config, { touch: false });
   state.settingsRequestId += 1;
   setSettingsBusy(true);
-  updateStatus(automatic ? "正在自动同步设置..." : "正在同步 WebDAV 设置...");
+  return settings;
+}
+
+async function uploadWebDav() {
+  const settings = await prepareWebDavTransfer();
+  if (!settings) return;
+  updateStatus("正在上传本机配置...");
   postToWorker({
-    type: "webdav-sync",
+    type: "webdav-upload",
     sessionId: state.sessionId,
     requestId: state.settingsRequestId,
     settings,
     config: state.config,
     modifiedAt: state.config.modifiedAt,
+    includeApiKey: settings.includeApiKey,
+  });
+}
+
+async function downloadWebDav() {
+  const settings = await prepareWebDavTransfer();
+  if (!settings) return;
+  updateStatus("正在下载远端配置...");
+  postToWorker({
+    type: "webdav-download",
+    sessionId: state.sessionId,
+    requestId: state.settingsRequestId,
+    settings,
   });
 }
 
@@ -761,8 +778,10 @@ function handleWorkerMessage(message) {
     "test-error",
     "webdav-test",
     "webdav-test-error",
-    "webdav-sync",
-    "webdav-sync-error",
+    "webdav-upload",
+    "webdav-upload-error",
+    "webdav-download",
+    "webdav-download-error",
   ].includes(message.type)) {
     if (message.requestId !== state.settingsRequestId) return;
     setSettingsBusy(false);
@@ -817,7 +836,8 @@ async function handleSettingsMessage(message) {
     "models-error",
     "test-error",
     "webdav-test-error",
-    "webdav-sync-error",
+    "webdav-upload-error",
+    "webdav-download-error",
   ].includes(message.type)) {
     if (message.type === "models-error") {
       state.models = [];
@@ -870,28 +890,31 @@ async function handleSettingsMessage(message) {
     return;
   }
 
-  if (message.type === "webdav-sync") {
-    const { direction, document } = message.result;
-    if (direction === "downloaded") {
-      const providerChanged = document.config.provider !== state.config.provider ||
-        normalizeBaseUrl(document.config.baseUrl) !== state.config.baseUrl;
-      state.config = normalizeConfig({
-        ...state.config,
-        ...document.config,
-        apiKey: providerChanged ? "" : state.config.apiKey,
-        modifiedAt: document.modifiedAt,
-        webDav: state.config.webDav,
-      });
-      await saveConfig(state.config, { touch: false, sync: false });
-      await renderConfig();
-      updateStatus(providerChanged
-        ? "已从 WebDAV 下载较新的设置；服务商已变化，请重新填写 API Key。"
-        : "已从 WebDAV 下载较新的设置。");
-      return;
-    }
-    updateStatus(direction === "uploaded"
-      ? "已将本机设置上传到 WebDAV。"
-      : "WebDAV 设置已是最新。");
+  if (message.type === "webdav-upload") {
+    updateStatus("已将本机配置上传到 WebDAV。");
+    return;
+  }
+
+  if (message.type === "webdav-download") {
+    const { document } = message;
+    const providerChanged = document.config.provider !== state.config.provider ||
+      normalizeBaseUrl(document.config.baseUrl) !== state.config.baseUrl;
+    const hasSyncedApiKey = state.config.webDav.includeApiKey &&
+      typeof document.config.apiKey === "string";
+    state.config = normalizeConfig({
+      ...state.config,
+      ...document.config,
+      apiKey: hasSyncedApiKey
+        ? document.config.apiKey
+        : providerChanged ? "" : state.config.apiKey,
+      modifiedAt: document.modifiedAt,
+      webDav: state.config.webDav,
+    });
+    await saveConfig(state.config, { touch: false });
+    await renderConfig({ preserveSettings: true });
+    updateStatus(providerChanged && !hasSyncedApiKey
+      ? "已下载远端配置；服务商已变化，请重新填写 API Key。"
+      : "已下载远端配置并覆盖本机配置。");
   }
 }
 
@@ -1290,12 +1313,13 @@ function updateStatus(message, isError = false) {
   clearTimeout(state.statusTimer);
   elements.status.textContent = message;
   elements.status.classList.toggle("error", isError);
-  if (message && !isError && !message.includes("正在")) {
+  if (message && !message.includes("正在")) {
     state.statusTimer = setTimeout(() => {
       if (elements.status.textContent !== message) return;
       elements.status.textContent = "";
+      elements.status.classList.remove("error");
       scheduleSessionSave();
-    }, 1600);
+    }, isError ? 5000 : 1600);
   }
   scheduleSessionSave();
 }
@@ -1311,8 +1335,7 @@ function restoreSessionState() {
     state.lastSourceLanguage = typeof saved.sourceLanguage === "string" ? saved.sourceLanguage : "";
     updateDetectedLanguage();
     state.lastRequestText = typeof saved.lastRequestText === "string" ? saved.lastRequestText : "";
-    elements.status.textContent = saved.status || "";
-    elements.status.classList.toggle("error", Boolean(saved.isError));
+    updateStatus(saved.status || "", Boolean(saved.isError));
     updateCharCount();
     setRunningState();
   }).catch(() => {

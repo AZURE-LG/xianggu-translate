@@ -258,8 +258,8 @@
               </div>
 
               <label class="field">
-                <span class="field-label">同步文件地址 <small>WEBDAV FILE URL</small></span>
-                <input id="webDavUrl" class="technical-input" type="url" spellcheck="false" placeholder="https://dav.example.com/xianggu/config.json">
+                <span class="field-label">WebDAV 服务地址 <small>WEBDAV SERVICE URL</small></span>
+                <input id="webDavUrl" class="technical-input" type="url" spellcheck="false" placeholder="https://dav.example.com/dav">
               </label>
 
               <label class="field">
@@ -276,15 +276,18 @@
               </label>
 
               <div class="preference-row">
-                <span>设置变更后自动同步</span>
-                <wa-switch id="webDavAutoSync" size="s" aria-label="设置变更后自动同步"></wa-switch>
+                <span>同步 API Key</span>
+                <wa-switch id="webDavIncludeApiKey" size="s" aria-label="同步 API Key"></wa-switch>
               </div>
 
               <div class="sync-actions">
-                <wa-button id="testWebDavButton" class="compact-button" variant="neutral" appearance="filled-outlined" size="s">测试连接</wa-button>
-                <wa-button id="syncWebDavButton" class="compact-button" variant="brand" appearance="outlined" size="s">立即同步</wa-button>
+                <wa-button id="uploadWebDavButton" class="compact-button" variant="brand" appearance="outlined" size="s">上传本机</wa-button>
+                <wa-button id="downloadWebDavButton" class="compact-button" variant="neutral" appearance="filled-outlined" size="s">下载远端</wa-button>
               </div>
-              <p class="sync-note">同步模型连接、语言与界面偏好；API Key 和 WebDAV 凭据仅保存在本机。</p>
+              <div class="sync-test-action">
+                <wa-button id="testWebDavButton" class="compact-button" variant="neutral" appearance="plain" size="s">测试连接</wa-button>
+              </div>
+              <p class="sync-note">内部使用 xianggu-translate/config.json。上传会覆盖远端文件，下载会覆盖本机配置；WebDAV 凭据仅保存在本机。</p>
             </section>
 
             <aside class="privacy-note">
@@ -292,7 +295,7 @@
                 <path d="M12 3 5 6v5c0 4.6 2.9 8 7 10 4.1-2 7-5.4 7-10V6l-7-3Z"></path>
                 <path d="M12 10v5M12 7.5v.5"></path>
               </svg>
-              <p>API Key 与待翻译文本只会发送到你配置的服务商地址。启用 WebDAV 后，非敏感设置会发送到你的同步地址；API Key、WebDAV 凭据和翻译内容不会写入同步文件。</p>
+              <p>API Key 与待翻译文本会发送到你配置的服务商地址。WebDAV 默认不同步 API Key，勾选后才会上传和下载；WebDAV 凭据和翻译内容不会写入。</p>
             </aside>
             </div>
 

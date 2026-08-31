@@ -330,15 +330,16 @@ TRANSLATION:
 - 目标语言。
 - 自动翻译开关。
 - 主题：浅色 / 深色 / 跟随系统。
-- WebDAV：开关、同步文件地址、用户名、密码、自动同步、测试连接和立即同步。
+- WebDAV：开关、服务地址、用户名、密码、是否包含 API Key、测试连接、上传本机和下载远端。
 
 行为：
 
 - API Key 保存到 `chrome.storage.local`。
 - 不同步到 Chrome profile。
 - WebDAV 凭据保存到 `chrome.storage.local`，不写入远端同步文件。
-- WebDAV 使用 `modifiedAt` 选择较新的设置版本；首次启用、浏览器启动和本地设置变化时可同步。
-- WebDAV 只同步服务商、Base URL、模型、语言、自动翻译、主题和颜色预设，不同步 API Key、WebDAV 凭据或翻译内容。
+- WebDAV 只在用户点击按钮时上传或下载，不根据 `modifiedAt` 自动判断方向；上传直接覆盖远端文件，下载直接覆盖本机配置。
+- 用户只填写 WebDAV 服务地址；扩展内部固定使用 `xianggu-translate/config.json`，目录不存在时通过 `MKCOL` 创建后写入。
+- WebDAV 同步服务商、Base URL、模型、语言、自动翻译、主题和颜色预设；用户可选择是否上传和下载 API Key，不同步 WebDAV 凭据或翻译内容。
 - 自动翻译开关和主题修改后立即生效；其余配置点击“保存设置”后立即生效。
 - 提供“获取模型”和“测试翻译”两个独立动作。
 - 切换服务商时自动填充该服务商 Base URL 和默认模型，并清空 API Key 与已加载模型列表，避免把一个服务商的密钥发送到另一个服务商。
@@ -410,7 +411,7 @@ TRANSLATION:
 - 不改写网页输入框。
 - 不保存翻译历史。
 - 不上传 API Key 到插件作者服务器。
-- WebDAV 仅在用户启用后连接用户填写的地址，远端文件不包含 API Key、WebDAV 凭据或翻译内容。
+- WebDAV 仅在用户启用并点击测试、上传或下载时连接用户填写的地址；远端文件可选包含 API Key，但不包含 WebDAV 凭据或翻译内容。
 - 只在用户触发翻译时，将用户输入文本发送给已配置服务商。
 - UI 关闭即取消该面板请求，不做后台继续翻译。
 - 当前草稿和最近结果只保存在 `chrome.storage.session`；这不是持久历史，浏览器退出后清除。
@@ -539,12 +540,12 @@ interface ExtensionConfig {
     url: string;
     username: string;
     password: string;
-    autoSync: boolean;
+    includeApiKey: boolean;
   };
 }
 ```
 
-v0.3 读取旧配置时补入“自动检测”源语言；旧版字符串目标语言命中内置标签时转为 preset，否则转为 custom。v0.4 继续补入颜色预设、修改时间和 WebDAV 配置。迁移只发生在本地读取配置时；只有用户启用 WebDAV 后才会产生同步网络请求。
+v0.3 读取旧配置时补入“自动检测”源语言；旧版字符串目标语言命中内置标签时转为 preset，否则转为 custom。v0.4 继续补入颜色预设、修改时间和 WebDAV 配置。迁移只发生在本地读取配置时；只有用户启用 WebDAV 并主动测试、上传或下载后才会产生同步网络请求。
 
 解析结果：
 
@@ -697,7 +698,7 @@ interface TranslationResult {
 | MV3 Service Worker 被回收 | 请求中断或状态丢失 | UI 关闭取消请求，重开时重建连接 |
 | Chrome Side Panel API 兼容差异 | 固定侧边栏失败 | 弹窗保持 114+ 基线；`sidePanel.open` 缺失时禁用入口并提示 |
 | 自定义域名权限体验复杂 | 用户不理解授权 | 在设置页解释授权原因，仅请求必要 origin |
-| API Key 本地存储被恶意软件读取 | 密钥泄露 | 明确提示风险，不同步、不上传 |
+| API Key 被本机恶意软件或 WebDAV 文件访问者读取 | 密钥泄露 | 明确提示风险，由用户保护本机和 WebDAV 访问权限 |
 | 模型默认名过期 | 新用户配置失败 | 支持手动填写和模型列表选择 |
 | 长请求无反馈 | 用户认为扩展卡死 | 停止按钮、超时和流式状态提示 |
 | 长文本超过模型上下文 | 服务商返回 400 或译文截断 | 映射为明确中文错误；`finish_reason=length` 提示可能截断 |
