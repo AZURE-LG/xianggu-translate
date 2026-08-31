@@ -14,12 +14,13 @@ import {
   permissionPattern,
   usesPlainHttp,
 } from "./core.js";
+import { normalizeWebDavUrl } from "./webdav.js";
 
 const THEME_ORDER = ["system", "light", "dark"];
 const COLOR_PRESET_ORDER = ["graphite", "forest", "lake", "sunset", "lavender"];
 
 const DEFAULT_CONFIG = {
-  version: 3,
+  version: 4,
   provider: "openai",
   baseUrl: PROVIDERS.openai.baseUrl,
   apiKey: "",
@@ -29,6 +30,14 @@ const DEFAULT_CONFIG = {
   autoTranslate: true,
   theme: "system",
   colorPreset: "graphite",
+  modifiedAt: 0,
+  webDav: {
+    enabled: false,
+    url: "",
+    username: "",
+    password: "",
+    autoSync: true,
+  },
 };
 
 const state = {
@@ -44,6 +53,7 @@ const state = {
   debounceTimer: null,
   statusTimer: null,
   sessionSaveTimer: null,
+  syncTimer: null,
   models: [],
   lastRequestText: "",
   lastSourceLanguage: "",
@@ -69,6 +79,9 @@ document.addEventListener("DOMContentLoaded", async () => {
   state.ready = true;
   document.body.dataset.ready = "true";
   updateModeControls();
+  if (state.config.webDav?.enabled && state.config.webDav.autoSync) {
+    state.syncTimer = setTimeout(() => syncWebDav({ automatic: true }), 350);
+  }
 });
 
 function collectElements() {
@@ -122,6 +135,14 @@ function collectElements() {
     "colorPresetControl",
     "testTranslationButton",
     "saveSettingsButton",
+    "webDavEnabled",
+    "webDavUrl",
+    "webDavUsername",
+    "webDavPassword",
+    "toggleWebDavPassword",
+    "webDavAutoSync",
+    "testWebDavButton",
+    "syncWebDavButton",
   ];
   for (const id of ids) {
     elements[id] = document.getElementById(id);
@@ -231,6 +252,10 @@ function bindEvents() {
     if (!event.target.closest?.(".model-input-control")) closeModelPicker();
   });
   elements.testTranslationButton.addEventListener("click", testTranslation);
+  elements.webDavEnabled.addEventListener("change", updateWebDavFormState);
+  elements.toggleWebDavPassword.addEventListener("click", toggleWebDavPasswordVisibility);
+  elements.testWebDavButton.addEventListener("click", testWebDav);
+  elements.syncWebDavButton.addEventListener("click", () => syncWebDav({ manual: true }));
   elements.settingsForm.addEventListener("submit", saveSettings);
 
   for (const button of elements.themeControl.querySelectorAll("[data-theme-choice]")) {
@@ -284,9 +309,10 @@ function normalizeConfig(value) {
   const provider = PROVIDERS[raw.provider] ? raw.provider : "openai";
   const preset = PROVIDERS[provider];
   const targetLanguage = normalizeTargetLanguage(raw.targetLanguage) ?? { ...DEFAULT_TARGET_LANGUAGE };
+  const rawWebDav = raw.webDav && typeof raw.webDav === "object" ? raw.webDav : {};
 
   return {
-    version: 3,
+    version: 4,
     provider,
     baseUrl: normalizeBaseUrl(raw.baseUrl) || preset.baseUrl,
     apiKey: typeof raw.apiKey === "string" ? raw.apiKey.slice(0, 500) : "",
@@ -296,6 +322,14 @@ function normalizeConfig(value) {
     autoTranslate: raw.autoTranslate !== false,
     theme: THEME_ORDER.includes(raw.theme) ? raw.theme : "system",
     colorPreset: COLOR_PRESET_ORDER.includes(raw.colorPreset) ? raw.colorPreset : "graphite",
+    modifiedAt: Number.isFinite(raw.modifiedAt) && raw.modifiedAt > 0 ? raw.modifiedAt : Date.now(),
+    webDav: {
+      enabled: rawWebDav.enabled === true,
+      url: normalizeWebDavUrl(rawWebDav.url),
+      username: typeof rawWebDav.username === "string" ? rawWebDav.username.trim().slice(0, 200) : "",
+      password: typeof rawWebDav.password === "string" ? rawWebDav.password.slice(0, 500) : "",
+      autoSync: rawWebDav.autoSync !== false,
+    },
   };
 }
 
@@ -335,6 +369,12 @@ function fillSettingsForm(config) {
   elements.apiKey.value = config.apiKey ?? "";
   elements.model.value = config.model ?? "";
   elements.settingsAutoTranslate.checked = Boolean(config.autoTranslate);
+  elements.webDavEnabled.checked = Boolean(config.webDav?.enabled);
+  elements.webDavUrl.value = config.webDav?.url ?? "";
+  elements.webDavUsername.value = config.webDav?.username ?? "";
+  elements.webDavPassword.value = config.webDav?.password ?? "";
+  elements.webDavAutoSync.checked = config.webDav?.autoSync !== false;
+  updateWebDavFormState();
   selectThemeChoice(config.theme ?? "system", false);
   selectColorPreset(config.colorPreset ?? "graphite", false);
 
@@ -371,6 +411,22 @@ function toggleApiKeyVisibility() {
   elements.toggleApiKey.textContent = isPassword ? "隐藏" : "显示";
 }
 
+function toggleWebDavPasswordVisibility() {
+  const isPassword = elements.webDavPassword.type === "password";
+  elements.webDavPassword.type = isPassword ? "text" : "password";
+  elements.toggleWebDavPassword.textContent = isPassword ? "隐藏" : "显示";
+}
+
+function readWebDavForm() {
+  return {
+    enabled: elements.webDavEnabled.checked,
+    url: normalizeWebDavUrl(elements.webDavUrl.value),
+    username: elements.webDavUsername.value.trim().slice(0, 200),
+    password: elements.webDavPassword.value.slice(0, 500),
+    autoSync: elements.webDavAutoSync.checked,
+  };
+}
+
 function readSettingsForm() {
   const provider = elements.provider.value;
   const baseUrl = normalizeBaseUrl(elements.baseUrl.value);
@@ -383,9 +439,10 @@ function readSettingsForm() {
   const targetLanguage = elements.targetLanguage.value === "custom"
     ? normalizeTargetLanguage({ type: "custom", label: elements.customTargetLanguage.value })
     : LANGUAGE_OPTIONS.find((item) => item.code === elements.targetLanguage.value);
+  const webDav = readWebDavForm();
 
   return {
-    version: 3,
+    version: 4,
     provider,
     baseUrl,
     apiKey,
@@ -395,6 +452,8 @@ function readSettingsForm() {
     autoTranslate: elements.settingsAutoTranslate.checked,
     theme,
     colorPreset,
+    modifiedAt: state.config?.modifiedAt ?? Date.now(),
+    webDav,
   };
 }
 
@@ -410,6 +469,9 @@ function validateSettings(config, options = {}) {
   }
   if (PROVIDERS[config.provider]?.requiresApiKey && !config.apiKey) {
     return "当前服务商需要 API Key。";
+  }
+  if (config.webDav.enabled && !config.webDav.url) {
+    return "WebDAV 文件地址无效：公网地址必须使用 HTTPS，且不能包含账号、查询参数或 hash。";
   }
   return "";
 }
@@ -430,6 +492,7 @@ async function saveSettings(event) {
       return;
     }
   }
+  if (config.webDav.enabled && !(await authorizeWebDav(config.webDav))) return;
 
   state.config = config;
   await saveConfig(config);
@@ -456,8 +519,87 @@ async function requestPermission(baseUrl) {
   }
 }
 
-async function saveConfig(config) {
+async function authorizeWebDav(settings) {
+  if (!settings.enabled || !settings.url) {
+    updateStatus("请先启用 WebDAV 并填写有效的同步文件地址。", true);
+    return false;
+  }
+  const granted = await requestPermission(settings.url);
+  if (!granted) updateStatus("需要授权 WebDAV 地址后才能连接。", true);
+  return granted;
+}
+
+async function saveConfig(config, options = {}) {
+  if (options.touch !== false) config.modifiedAt = Date.now();
   await chrome.storage.local.set({ config });
+  if (options.sync !== false && state.ready && config.webDav?.enabled && config.webDav.autoSync) {
+    clearTimeout(state.syncTimer);
+    state.syncTimer = setTimeout(() => syncWebDav({ automatic: true }), 700);
+  }
+}
+
+function updateWebDavFormState() {
+  const disabled = !elements.webDavEnabled.checked || state.settingsBusy;
+  elements.webDavUrl.disabled = disabled;
+  elements.webDavUsername.disabled = disabled;
+  elements.webDavPassword.disabled = disabled;
+  elements.toggleWebDavPassword.disabled = disabled;
+  elements.webDavAutoSync.disabled = disabled;
+  elements.testWebDavButton.disabled = disabled;
+  elements.syncWebDavButton.disabled = disabled;
+}
+
+async function testWebDav() {
+  if (state.settingsBusy) return;
+  const settings = readWebDavForm();
+  if (!(await authorizeWebDav(settings))) return;
+
+  state.settingsRequestId += 1;
+  setSettingsBusy(true);
+  updateStatus("正在测试 WebDAV 连接...");
+  postToWorker({
+    type: "webdav-test",
+    sessionId: state.sessionId,
+    requestId: state.settingsRequestId,
+    settings,
+  });
+}
+
+async function syncWebDav(options = {}) {
+  const automatic = options.automatic === true;
+  if (!state.config) return;
+  if (state.settingsBusy) {
+    if (automatic) {
+      clearTimeout(state.syncTimer);
+      state.syncTimer = setTimeout(() => syncWebDav({ automatic: true }), 1000);
+    }
+    return;
+  }
+  if (automatic && !state.config.webDav?.enabled) return;
+
+  const settings = automatic ? state.config.webDav : readWebDavForm();
+  if (!settings.enabled || !settings.url) {
+    if (!automatic) updateStatus("请先启用 WebDAV 并填写有效的同步文件地址。", true);
+    return;
+  }
+  if (!automatic && !(await authorizeWebDav(settings))) return;
+
+  if (!automatic) {
+    state.config = { ...state.config, webDav: settings };
+    await saveConfig(state.config, { touch: false, sync: false });
+  }
+
+  state.settingsRequestId += 1;
+  setSettingsBusy(true);
+  updateStatus(automatic ? "正在自动同步设置..." : "正在同步 WebDAV 设置...");
+  postToWorker({
+    type: "webdav-sync",
+    sessionId: state.sessionId,
+    requestId: state.settingsRequestId,
+    settings,
+    config: state.config,
+    modifiedAt: state.config.modifiedAt,
+  });
 }
 
 function prepareSettingsConfig(options = {}) {
@@ -588,6 +730,7 @@ function setSettingsBusy(busy) {
   elements.loadModelButton.disabled = busy;
   elements.testTranslationButton.disabled = busy;
   elements.saveSettingsButton.disabled = busy;
+  updateWebDavFormState();
   updateModelPickerState();
 }
 
@@ -611,10 +754,19 @@ function postToWorker(message) {
 }
 
 function handleWorkerMessage(message) {
-  if (["models", "models-error", "test", "test-error"].includes(message.type)) {
+  if ([
+    "models",
+    "models-error",
+    "test",
+    "test-error",
+    "webdav-test",
+    "webdav-test-error",
+    "webdav-sync",
+    "webdav-sync-error",
+  ].includes(message.type)) {
     if (message.requestId !== state.settingsRequestId) return;
     setSettingsBusy(false);
-    handleSettingsMessage(message);
+    void handleSettingsMessage(message);
     return;
   }
 
@@ -660,8 +812,13 @@ function handleWorkerMessage(message) {
   }
 }
 
-function handleSettingsMessage(message) {
-  if (message.type === "models-error" || message.type === "test-error") {
+async function handleSettingsMessage(message) {
+  if ([
+    "models-error",
+    "test-error",
+    "webdav-test-error",
+    "webdav-sync-error",
+  ].includes(message.type)) {
     if (message.type === "models-error") {
       state.models = [];
       elements.modelOptions.replaceChildren();
@@ -705,6 +862,36 @@ function handleSettingsMessage(message) {
   if (message.type === "test") {
     const source = formatSourceLanguage(message.result.sourceLanguage);
     updateStatus(`测试翻译成功（${source}）：${message.result.translation}`);
+    return;
+  }
+
+  if (message.type === "webdav-test") {
+    updateStatus("WebDAV 连接成功，可以读取该地址。");
+    return;
+  }
+
+  if (message.type === "webdav-sync") {
+    const { direction, document } = message.result;
+    if (direction === "downloaded") {
+      const providerChanged = document.config.provider !== state.config.provider ||
+        normalizeBaseUrl(document.config.baseUrl) !== state.config.baseUrl;
+      state.config = normalizeConfig({
+        ...state.config,
+        ...document.config,
+        apiKey: providerChanged ? "" : state.config.apiKey,
+        modifiedAt: document.modifiedAt,
+        webDav: state.config.webDav,
+      });
+      await saveConfig(state.config, { touch: false, sync: false });
+      await renderConfig();
+      updateStatus(providerChanged
+        ? "已从 WebDAV 下载较新的设置；服务商已变化，请重新填写 API Key。"
+        : "已从 WebDAV 下载较新的设置。");
+      return;
+    }
+    updateStatus(direction === "uploaded"
+      ? "已将本机设置上传到 WebDAV。"
+      : "WebDAV 设置已是最新。");
   }
 }
 

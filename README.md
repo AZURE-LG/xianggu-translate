@@ -1,6 +1,6 @@
 # 香菇翻译
 
-香菇翻译是一款 Chrome / Edge 输入式翻译扩展。v0.4 在 Google 翻译式交互上引入本地 Web Awesome 组件体系，使用可访问的下拉菜单、按钮、开关和 Tooltip，并重新设计为中性画布、绿色输入端与紫色译文端。扩展不读取网页、不注入脚本，也不保存持久翻译历史；你输入的文本只会发送到自己配置的 OpenAI-compatible 服务商。
+香菇翻译是一款 Chrome / Edge 输入式翻译扩展。v0.4 在 Google 翻译式交互上引入本地 Web Awesome 组件体系，使用可访问的下拉菜单、按钮、开关和 Tooltip，并重新设计为中性画布、绿色输入端与紫色译文端。扩展不读取网页、不注入脚本，也不保存持久翻译历史；你输入的文本只会发送到自己配置的 OpenAI-compatible 服务商。可选的 WebDAV 功能只同步非敏感设置。
 
 ## 项目状态
 
@@ -110,6 +110,8 @@ powershell -NoProfile -ExecutionPolicy Bypass -File tools\package-crx.ps1
 - 翻译进行中可点击“停止”。
 - “重译”会使用上一次实际发出的原文，不会读取随后修改的输入框。
 - Popup 中点击“侧边栏”可在支持 Chrome Side Panel 的浏览器中连续使用。
+- 在设置中启用 WebDAV 后，填写一个可读写的 JSON 文件地址，可测试连接或立即双向同步；设置变更后也可自动同步。
+- WebDAV 按 `modifiedAt` 时间戳选择较新的版本。同步服务商变化时会清空本机 API Key，避免把旧密钥发送到新服务商。
 
 ## 隐私与权限
 
@@ -117,6 +119,8 @@ powershell -NoProfile -ExecutionPolicy Bypass -File tools\package-crx.ps1
 - `sidePanel`：打开浏览器侧边栏。
 - 内置服务商域名拥有固定网络权限；自定义地址只在保存或测试时请求对应 origin 的可选权限。
 - API Key 保存在 `chrome.storage.local`，不会同步到插件作者服务器，但仍属于本机浏览器配置中的敏感信息。
+- WebDAV 用户名和密码同样只保存在 `chrome.storage.local`；远端文件不包含 API Key、WebDAV 凭据、翻译原文、译文或历史。
+- WebDAV 同步包含服务商、Base URL、模型、源语言、目标语言、自动翻译、主题和颜色预设。
 - 扩展不申请 `tabs`、`activeTab`、`scripting` 或网页全量读取权限。
 
 ## 本地验证
@@ -146,7 +150,7 @@ python -m playwright install chromium
 python tools/browser-smoke.py
 ```
 
-冒烟测试覆盖首次配置、手动与自动翻译、流式中间态、停止、复制、重译快照、模型列表、测试翻译、会话恢复、目标语言入口、主题、工作区显隐，以及 Popup、Side Panel、Options 多尺寸布局。最新界面截图写入 `artifacts/`。脚本当前使用 Playwright 安装目录中的 Chromium；如果本机安装的浏览器版本目录与脚本中的路径不一致，需要在 `tools/browser-smoke.py` 中更新 `CHROMIUM` 路径，或改用项目约定的 Chromium 版本。
+冒烟测试覆盖首次配置、手动与自动翻译、流式中间态、停止、复制、重译快照、模型列表、测试翻译、会话恢复、目标语言入口、主题、WebDAV 连接与同步、工作区显隐，以及 Popup、Side Panel、Options 多尺寸布局。最新界面截图写入 `artifacts/`。脚本当前使用 Playwright 安装目录中的 Chromium；如果本机安装的浏览器版本目录与脚本中的路径不一致，需要在 `tools/browser-smoke.py` 中更新 `CHROMIUM` 路径，或改用项目约定的 Chromium 版本。
 
 ## 打包与发布
 
@@ -219,4 +223,4 @@ powershell -NoProfile -ExecutionPolicy Bypass -File tools\package.ps1
 
 ## 当前边界
 
-v0.4 是输入式翻译工具，不包含整页翻译、划词翻译、网页输入框回填、翻译历史、云同步或 Firefox / Safari 支持。
+v0.4 是输入式翻译工具，不包含整页翻译、划词翻译、网页输入框回填、翻译历史、账号式云同步或 Firefox / Safari 支持；仅提供用户自带 WebDAV 的设置同步。

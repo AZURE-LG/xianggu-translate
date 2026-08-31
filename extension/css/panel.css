@@ -282,6 +282,18 @@ body {
   font-size: 13px;
   line-height: 1.45;
   -webkit-font-smoothing: antialiased;
+  --wa-color-surface-raised: var(--surface);
+  --wa-color-surface-default: var(--surface);
+  --wa-color-surface-lowered: var(--surface-soft);
+  --wa-color-surface-border: var(--line);
+  --wa-color-text-normal: var(--ink);
+  --wa-color-text-quiet: var(--muted);
+  --wa-form-control-background-color: var(--surface);
+  --wa-form-control-border-color: var(--line);
+  --wa-form-control-label-color: var(--ink);
+  --wa-form-control-value-color: var(--ink);
+  --wa-form-control-hint-color: var(--muted);
+  --wa-form-control-placeholder-color: var(--quiet);
 }
 
 body[data-mode="sidepanel"] {
@@ -1535,6 +1547,11 @@ select {
   transition: border-color 120ms ease, background-color 120ms ease, box-shadow 120ms ease;
 }
 
+option {
+  background: var(--surface);
+  color: var(--ink);
+}
+
 input:focus-visible,
 select:focus-visible {
   border-color: color-mix(in srgb, var(--primary) 55%, var(--line));
@@ -1828,6 +1845,24 @@ input:disabled {
   color: var(--muted);
 }
 
+.sync-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 7px;
+}
+
+.sync-actions wa-button,
+.sync-actions wa-button::part(base) {
+  width: 100%;
+}
+
+.sync-note {
+  margin: -2px 0 0;
+  color: var(--quiet);
+  font-size: 10px;
+  line-height: 1.5;
+}
+
 .privacy-note p {
   margin: 0;
   font-size: 11px;
@@ -1937,6 +1972,7 @@ input:disabled {
     display: grid;
     grid-template-areas:
       "connection preferences"
+      "connection sync"
       "privacy privacy";
     grid-template-columns: minmax(0, 1.25fr) minmax(240px, 0.75fr);
     gap: 12px;
@@ -1952,6 +1988,10 @@ input:disabled {
 
   body[data-mode="options"] .preferences-card {
     grid-area: preferences;
+  }
+
+  body[data-mode="options"] .sync-card {
+    grid-area: sync;
   }
 
   body[data-mode="options"] .privacy-note {

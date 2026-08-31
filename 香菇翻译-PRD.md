@@ -103,7 +103,7 @@ MVP 不包含埋点、遥测或后端统计。成功指标只用于本地 QA 和
 - 选中文本后右键翻译。
 - 翻译结果一键回填网页。
 - 翻译历史记录。
-- 云端同步。
+- 插件自建账号式云同步。
 - 后端代理、账号系统和计费。
 - Anthropic、Gemini 等非 OpenAI-compatible 协议。
 - Firefox 和 Safari。
@@ -330,11 +330,15 @@ TRANSLATION:
 - 目标语言。
 - 自动翻译开关。
 - 主题：浅色 / 深色 / 跟随系统。
+- WebDAV：开关、同步文件地址、用户名、密码、自动同步、测试连接和立即同步。
 
 行为：
 
 - API Key 保存到 `chrome.storage.local`。
 - 不同步到 Chrome profile。
+- WebDAV 凭据保存到 `chrome.storage.local`，不写入远端同步文件。
+- WebDAV 使用 `modifiedAt` 选择较新的设置版本；首次启用、浏览器启动和本地设置变化时可同步。
+- WebDAV 只同步服务商、Base URL、模型、语言、自动翻译、主题和颜色预设，不同步 API Key、WebDAV 凭据或翻译内容。
 - 自动翻译开关和主题修改后立即生效；其余配置点击“保存设置”后立即生效。
 - 提供“获取模型”和“测试翻译”两个独立动作。
 - 切换服务商时自动填充该服务商 Base URL 和默认模型，并清空 API Key 与已加载模型列表，避免把一个服务商的密钥发送到另一个服务商。
@@ -406,6 +410,7 @@ TRANSLATION:
 - 不改写网页输入框。
 - 不保存翻译历史。
 - 不上传 API Key 到插件作者服务器。
+- WebDAV 仅在用户启用后连接用户填写的地址，远端文件不包含 API Key、WebDAV 凭据或翻译内容。
 - 只在用户触发翻译时，将用户输入文本发送给已配置服务商。
 - UI 关闭即取消该面板请求，不做后台继续翻译。
 - 当前草稿和最近结果只保存在 `chrome.storage.session`；这不是持久历史，浏览器退出后清除。
@@ -518,7 +523,7 @@ type SourceLanguage =
   | { type: "preset"; code: string; label: string };
 
 interface ExtensionConfig {
-  version: 2;
+  version: 4;
   provider: ProviderId;
   baseUrl: string;
   apiKey: string;
@@ -527,10 +532,19 @@ interface ExtensionConfig {
   targetLanguage: TargetLanguage;
   autoTranslate: boolean;
   theme: ThemeMode;
+  colorPreset: string;
+  modifiedAt: number;
+  webDav: {
+    enabled: boolean;
+    url: string;
+    username: string;
+    password: string;
+    autoSync: boolean;
+  };
 }
 ```
 
-v0.3 读取旧配置时补入“自动检测”源语言；旧版字符串目标语言命中内置标签时转为 preset，否则转为 custom。迁移只发生在本地读取配置时，不产生网络请求。
+v0.3 读取旧配置时补入“自动检测”源语言；旧版字符串目标语言命中内置标签时转为 preset，否则转为 custom。v0.4 继续补入颜色预设、修改时间和 WebDAV 配置。迁移只发生在本地读取配置时；只有用户启用 WebDAV 后才会产生同步网络请求。
 
 解析结果：
 

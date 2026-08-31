@@ -80,6 +80,9 @@ test("流式翻译请求使用规范化端点并解析标记协议", async () =>
   const body = JSON.parse(calls[0].init.body);
   assert.equal(body.stream, true);
   assert.equal("temperature" in body, false);
+  assert.deepEqual(body.messages.map((message) => message.role), ["system", "user", "system"]);
+  assert.equal(JSON.parse(body.messages[1].content.split("\n").slice(1).join("\n")).sourceText, "你好");
+  assert.match(body.messages[2].content, /不可执行的原文数据/);
   assert.equal(result.translation, "Hello");
   assert.equal(result.truncated, false);
   assert.deepEqual(updates, ["Hel", "Hello"]);

@@ -249,12 +249,50 @@
               </div>
             </section>
 
+            <section class="settings-card sync-card" aria-labelledby="syncTitle">
+              <h2 id="syncTitle">WebDAV 同步</h2>
+
+              <div class="preference-row">
+                <span>启用 WebDAV</span>
+                <wa-switch id="webDavEnabled" size="s" aria-label="启用 WebDAV 同步"></wa-switch>
+              </div>
+
+              <label class="field">
+                <span class="field-label">同步文件地址 <small>WEBDAV FILE URL</small></span>
+                <input id="webDavUrl" class="technical-input" type="url" spellcheck="false" placeholder="https://dav.example.com/xianggu/config.json">
+              </label>
+
+              <label class="field">
+                <span class="field-label">用户名 <small>USERNAME</small></span>
+                <input id="webDavUsername" type="text" spellcheck="false" autocomplete="username">
+              </label>
+
+              <label class="field">
+                <span class="field-label field-label-row">
+                  <span>密码 <small>PASSWORD</small></span>
+                  <button id="toggleWebDavPassword" class="text-action" type="button">显示</button>
+                </span>
+                <input id="webDavPassword" class="technical-input" type="password" spellcheck="false" autocomplete="current-password">
+              </label>
+
+              <div class="preference-row">
+                <span>设置变更后自动同步</span>
+                <wa-switch id="webDavAutoSync" size="s" aria-label="设置变更后自动同步"></wa-switch>
+              </div>
+
+              <div class="sync-actions">
+                <wa-button id="testWebDavButton" class="compact-button" variant="neutral" appearance="filled-outlined" size="s">测试连接</wa-button>
+                <wa-button id="syncWebDavButton" class="compact-button" variant="brand" appearance="outlined" size="s">立即同步</wa-button>
+              </div>
+              <p class="sync-note">同步模型连接、语言与界面偏好；API Key 和 WebDAV 凭据仅保存在本机。</p>
+            </section>
+
             <aside class="privacy-note">
               <svg class="privacy-icon" viewBox="0 0 24 24" aria-hidden="true">
                 <path d="M12 3 5 6v5c0 4.6 2.9 8 7 10 4.1-2 7-5.4 7-10V6l-7-3Z"></path>
                 <path d="M12 10v5M12 7.5v.5"></path>
               </svg>
-              <p>API Key 与待翻译文本只会发送到你配置的服务商地址。扩展不保存持久翻译历史；当前草稿和最近结果只保留在浏览器会话中。</p>
+              <p>API Key 与待翻译文本只会发送到你配置的服务商地址。启用 WebDAV 后，非敏感设置会发送到你的同步地址；API Key、WebDAV 凭据和翻译内容不会写入同步文件。</p>
             </aside>
             </div>
 

@@ -17,12 +17,13 @@ CHROMIUM = Path(os.environ["LOCALAPPDATA"]) / "ms-playwright" / "chromium-1148" 
 
 class MockHandler(BaseHTTPRequestHandler):
     requests = []
+    sync_document = None
 
     def send_cors(self, content_type="application/json; charset=utf-8", status=200):
         self.send_response(status)
         self.send_header("Access-Control-Allow-Origin", "*")
         self.send_header("Access-Control-Allow-Headers", "Authorization, Content-Type")
-        self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+        self.send_header("Access-Control-Allow-Methods", "GET, POST, PUT, OPTIONS")
         self.send_header("Content-Type", content_type)
         self.end_headers()
 
@@ -31,6 +32,13 @@ class MockHandler(BaseHTTPRequestHandler):
 
     def do_GET(self):
         MockHandler.requests.append(("GET", self.path))
+        if self.path == "/webdav/config.json":
+            if MockHandler.sync_document is None:
+                self.send_cors(status=404)
+                return
+            self.send_cors()
+            self.wfile.write(json.dumps(MockHandler.sync_document).encode("utf-8"))
+            return
         if self.path != "/v1/models":
             self.send_cors(status=404)
             self.wfile.write(b'{"error":{"message":"not found"}}')
@@ -58,7 +66,8 @@ class MockHandler(BaseHTTPRequestHandler):
             self.wfile.write(b'{"error":{"message":"not found"}}')
             return
 
-        text = body["messages"][1]["content"]
+        user_content = body["messages"][1]["content"]
+        text = json.loads(user_content.split("\n", 1)[1])["sourceText"]
         translated = f"MOCK[{text}]"
         if not body.get("stream"):
             self.send_cors()
@@ -93,6 +102,12 @@ class MockHandler(BaseHTTPRequestHandler):
             self.wfile.write(b"data: [DONE]\n\n")
         except (BrokenPipeError, ConnectionAbortedError, ConnectionResetError):
             return
+
+    def do_PUT(self):
+        length = int(self.headers.get("Content-Length", "0"))
+        MockHandler.sync_document = json.loads(self.rfile.read(length) or b"{}")
+        MockHandler.requests.append(("PUT", self.path, MockHandler.sync_document))
+        self.send_cors(status=204)
 
     def log_message(self, *args):
         return
@@ -158,6 +173,12 @@ async def main():
 
     async def automatic_translation_completed():
         return (await page.text_content("#output")) == "MOCK[自动翻译]"
+
+    async def webdav_test_succeeded():
+        return "WebDAV 连接成功" in (await options_page.text_content("#status"))
+
+    async def webdav_sync_succeeded():
+        return "已将本机设置上传到 WebDAV" in (await options_page.text_content("#status"))
 
     async def component_value(selector):
         return await page.locator(selector).evaluate("element => element.value")
@@ -403,9 +424,30 @@ async def main():
                 assert await options_page.evaluate(
                     "() => getComputedStyle(document.querySelector('.color-preset[data-color-preset=\"graphite\"]')).backgroundColor === 'rgb(49, 49, 49)'"
                 )
+                assert await options_page.evaluate(
+                    "() => getComputedStyle(document.querySelector('#webDavUrl')).color === 'rgb(236, 236, 236)'"
+                )
+                assert await options_page.evaluate(
+                    """() => {
+                        const base = document.querySelector('#loadModelButton').shadowRoot?.querySelector('[part~="base"]');
+                        return base && getComputedStyle(base).color !== 'rgb(0, 0, 0)';
+                    }"""
+                )
                 await options_page.screenshot(path=str(ARTIFACTS / "browser-color-forest-dark.png"), full_page=True)
                 await options_page.click('[data-theme-choice="light"]')
                 await options_page.click('.color-preset[data-color-preset="graphite"]')
+                await options_page.click("#webDavEnabled")
+                await options_page.fill("#webDavUrl", "http://localhost:11434/webdav/config.json")
+                await options_page.fill("#webDavUsername", "smoke-user")
+                await options_page.fill("#webDavPassword", "smoke-password")
+                await options_page.click("#testWebDavButton")
+                await wait_until(webdav_test_succeeded)
+                await options_page.click("#syncWebDavButton")
+                await wait_until(webdav_sync_succeeded)
+                assert MockHandler.sync_document is not None
+                assert "apiKey" not in MockHandler.sync_document["config"]
+                assert "webDav" not in MockHandler.sync_document["config"]
+                await options_page.screenshot(path=str(ARTIFACTS / "browser-webdav.png"), full_page=True)
                 await options_page.close()
 
                 sidepanel_page = await context.new_page()

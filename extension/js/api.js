@@ -1,5 +1,7 @@
 import {
   buildSystemPrompt,
+  buildTranslationReminder,
+  buildTranslationUserMessage,
   describeHttpError,
   filterChatModels,
   parseMarkedOutput,
@@ -129,7 +131,8 @@ function requestBody(config, text, stream) {
     model: config.model,
     messages: [
       { role: "system", content: buildSystemPrompt(config.targetLanguage, config.sourceLanguage) },
-      { role: "user", content: text },
+      { role: "user", content: buildTranslationUserMessage(text) },
+      { role: "system", content: buildTranslationReminder() },
     ],
     stream,
   });

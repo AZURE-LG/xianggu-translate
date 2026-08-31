@@ -4,6 +4,7 @@ import {
   requestTestTranslation,
   requestTranslation,
 } from "./api.js";
+import { syncWebDavConfig, testWebDavConnection } from "./webdav.js";
 
 const FIRST_BYTE_TIMEOUT = 20_000;
 const TOTAL_TIMEOUT = 120_000;
@@ -42,6 +43,16 @@ chrome.runtime.onConnect.addListener((port) => {
 
     if (message.type === "test") {
       handleTest(port, message);
+      return;
+    }
+
+    if (message.type === "webdav-test") {
+      handleWebDavTest(port, message);
+      return;
+    }
+
+    if (message.type === "webdav-sync") {
+      handleWebDavSync(port, message);
     }
   });
 
@@ -184,6 +195,47 @@ async function handleTest(port, message) {
     post(port, requestId, { type: "test", result });
   } catch (error) {
     post(port, requestId, { type: "test-error", message: describeSettingsError(error) });
+  } finally {
+    controller.finish();
+  }
+}
+
+async function handleWebDavTest(port, message) {
+  const { sessionId, requestId, settings } = message;
+  const controller = createSettingsController(sessionId);
+  try {
+    await testWebDavConnection(settings, controller.signal);
+    post(port, requestId, { type: "webdav-test" });
+  } catch (error) {
+    post(port, requestId, {
+      type: "webdav-test-error",
+      message: error?.name === "AbortError"
+        ? "WebDAV 连接测试超时。"
+        : error?.message || "无法连接 WebDAV，请检查地址和网络。",
+    });
+  } finally {
+    controller.finish();
+  }
+}
+
+async function handleWebDavSync(port, message) {
+  const { sessionId, requestId, settings, config, modifiedAt } = message;
+  const controller = createSettingsController(sessionId);
+  try {
+    const result = await syncWebDavConfig({
+      settings,
+      config,
+      modifiedAt,
+      signal: controller.signal,
+    });
+    post(port, requestId, { type: "webdav-sync", result });
+  } catch (error) {
+    post(port, requestId, {
+      type: "webdav-sync-error",
+      message: error?.name === "AbortError"
+        ? "WebDAV 同步超时。"
+        : error?.message || "无法连接 WebDAV，请检查地址和网络。",
+    });
   } finally {
     controller.finish();
   }
