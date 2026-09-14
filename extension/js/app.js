@@ -261,7 +261,7 @@ function bindEvents() {
   elements.settingsForm.addEventListener("submit", saveSettings);
 
   for (const button of elements.themeControl.querySelectorAll("[data-theme-choice]")) {
-    button.addEventListener("click", () => selectThemeChoice(button.dataset.themeChoice, true));
+    button.addEventListener("click", (event) => selectThemeChoice(button.dataset.themeChoice, true, event));
     button.addEventListener("keydown", handleThemeChoiceKeydown);
   }
 
@@ -1068,7 +1068,7 @@ async function pasteInput() {
   }
 }
 
-function selectThemeChoice(value, preview) {
+function selectThemeChoice(value, preview, event) {
   const choice = THEME_ORDER.includes(value) ? value : "system";
   elements.theme.value = choice;
   for (const button of elements.themeControl.querySelectorAll("[data-theme-choice]")) {
@@ -1076,7 +1076,10 @@ function selectThemeChoice(value, preview) {
     button.setAttribute("aria-checked", String(selected));
     button.tabIndex = selected ? 0 : -1;
   }
-  if (preview) applyTheme(choice);
+  if (preview) {
+    const trigger = event ?? elements.themeControl.querySelector(`[data-theme-choice="${choice}"]`);
+    transitionTheme(choice, trigger);
+  }
 }
 
 function handleThemeChoiceKeydown(event) {
@@ -1122,13 +1125,73 @@ function applyColorPreset(value) {
   document.body.dataset.colorPreset = COLOR_PRESET_ORDER.includes(value) ? value : "graphite";
 }
 
-async function toggleQuickTheme() {
+async function toggleQuickTheme(event) {
   if (!state.config) return;
   const nextTheme = document.body.dataset.theme === "dark" ? "light" : "dark";
   state.config.theme = nextTheme;
   selectThemeChoice(nextTheme, false);
-  await applyTheme(nextTheme);
+  await transitionTheme(nextTheme, event ?? elements.themeToggleButton);
   await saveConfig(state.config);
+}
+
+async function transitionTheme(targetChoice, trigger) {
+  const prefersReducedMotion = typeof window.matchMedia === "function"
+    && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  if (typeof document.startViewTransition !== "function" || prefersReducedMotion) {
+    await applyTheme(targetChoice);
+    return;
+  }
+
+  let x = window.innerWidth / 2;
+  let y = window.innerHeight / 2;
+
+  if (trigger && typeof trigger === "object") {
+    if ("clientX" in trigger && "clientY" in trigger && trigger.clientX > 0 && trigger.clientY > 0) {
+      x = trigger.clientX;
+      y = trigger.clientY;
+    } else if (trigger instanceof HTMLElement) {
+      const rect = trigger.getBoundingClientRect();
+      x = rect.left + rect.width / 2;
+      y = rect.top + rect.height / 2;
+    }
+  } else if (elements.themeToggleButton) {
+    const rect = elements.themeToggleButton.getBoundingClientRect();
+    x = rect.left + rect.width / 2;
+    y = rect.top + rect.height / 2;
+  }
+
+  const endRadius = Math.hypot(
+    Math.max(x, window.innerWidth - x),
+    Math.max(y, window.innerHeight - y)
+  );
+
+  document.documentElement.classList.add("view-transition-active");
+  const transition = document.startViewTransition(async () => {
+    await applyTheme(targetChoice);
+  });
+
+  try {
+    await transition.ready;
+    const animation = document.documentElement.animate(
+      {
+        clipPath: [
+          `circle(0px at ${x}px ${y}px)`,
+          `circle(${endRadius}px at ${x}px ${y}px)`,
+        ],
+      },
+      {
+        duration: 400,
+        easing: "cubic-bezier(0.16, 1, 0.3, 1)",
+        pseudoElement: "::view-transition-new(root)",
+      }
+    );
+    await animation.finished;
+  } catch {
+    // Ignore interrupted transitions
+  } finally {
+    document.documentElement.classList.remove("view-transition-active");
+  }
 }
 
 async function applyTheme(previewPreference) {
