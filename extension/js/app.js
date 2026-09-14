@@ -60,6 +60,7 @@ const state = {
   ready: false,
   nav: null,
   error: null,
+  draftTimer: null,
 };
 
 const elements = {};
@@ -77,6 +78,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   updateCharCount();
   setRunningState();
   await restoreSessionState();
+  await restoreSettingsDraftIfVisible();
   state.ready = true;
   document.body.dataset.ready = "true";
   updateModeControls();
@@ -565,9 +567,54 @@ async function authorizeWebDav(settings) {
   return granted;
 }
 
-async function saveConfig(config, options = {}) {
+function saveConfig(config, options = {}) {
   if (options.touch !== false) config.modifiedAt = Date.now();
-  await chrome.storage.local.set({ config });
+  return chrome.storage.local.set({ config });
+}
+
+// ---- 设置草稿（防授权弹窗/焦点抢占导致 popup 关闭后表单丢失） ----
+
+const DRAFT_STORAGE_KEY = "settingsDraft";
+
+function scheduleSettingsDraftSave() {
+  if (!state.ready) return;
+  clearTimeout(state.draftTimer);
+  state.draftTimer = setTimeout(() => {
+    try {
+      const draft = readSettingsForm();
+      draft.savedAt = Date.now();
+      globalThis.chrome?.storage?.session?.set({ [DRAFT_STORAGE_KEY]: draft });
+    } catch {
+      // 会话存储不可用时静默降级为无草稿
+    }
+  }, 300);
+}
+
+async function loadSettingsDraft() {
+  try {
+    const result = (await globalThis.chrome?.storage?.session?.get(DRAFT_STORAGE_KEY)) ?? {};
+    return result[DRAFT_STORAGE_KEY] ?? null;
+  } catch {
+    return null;
+  }
+}
+
+async function clearSettingsDraft() {
+  clearTimeout(state.draftTimer);
+  try {
+    await globalThis.chrome?.storage?.session?.remove(DRAFT_STORAGE_KEY);
+  } catch {
+    // 忽略
+  }
+}
+
+async function restoreSettingsDraftIfVisible() {
+  if (elements.settings.hidden) return false;
+  const draft = await loadSettingsDraft();
+  if (!draft) return false;
+  fillSettingsForm({ ...state.config, ...draft });
+  updateStatus("已恢复未保存的设置草稿。");
+  return true;
 }
 
 function updateWebDavFormState() {
@@ -1097,7 +1144,10 @@ function selectThemeChoice(value, preview) {
     button.setAttribute("aria-checked", String(selected));
     button.tabIndex = selected ? 0 : -1;
   }
-  if (preview) applyTheme(choice);
+  if (preview) {
+    applyTheme(choice);
+    scheduleSettingsDraftSave();
+  }
 }
 
 function handleThemeChoiceKeydown(event) {
@@ -1181,9 +1231,12 @@ function toggleSettings() {
   }
 }
 
-function openSettings(nav = { from: "manual" }) {
+async function openSettings(nav = { from: "manual" }) {
   state.nav = nav;
-  fillSettingsForm(state.config);
+  const restored = await restoreSettingsDraftIfVisible();
+  if (!restored) {
+    fillSettingsForm(state.config);
+  }
   showSettings();
   const target = nav.focusField ? document.getElementById(nav.focusField) : null;
   if (target) {
