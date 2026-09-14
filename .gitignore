@@ -2,7 +2,13 @@
 *.pem
 node_modules/
 debug.log
-extension.crx
+*.crx
 extension.pem
 __pycache__/
 *.py[cod]
+
+# AI 协作工作区数据
+.workbuddy/
+
+# 打包临时副本（每次打包重新生成）
+香菇翻译-extension/
