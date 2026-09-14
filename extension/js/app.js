@@ -1034,8 +1034,10 @@ async function copyOutput() {
   try {
     await navigator.clipboard.writeText(text);
     elements.copyButtonLabel.textContent = "已复制";
+    elements.copyButton.classList.add("is-copied");
     setTimeout(() => {
       elements.copyButtonLabel.textContent = "复制";
+      elements.copyButton.classList.remove("is-copied");
     }, 1200);
     updateStatus("已复制译文。");
   } catch {
@@ -1242,6 +1244,10 @@ async function swapLanguages() {
   const target = normalizeTargetLanguage(state.config?.targetLanguage);
   if (state.running || source.type !== "preset" || target?.type !== "preset") return;
 
+  elements.swapLanguagesButton.classList.add("animating");
+  setTimeout(() => {
+    elements.swapLanguagesButton.classList.remove("animating");
+  }, 350);
   const translatedText = elements.output.textContent.trim();
   state.config.sourceLanguage = { ...target };
   state.config.targetLanguage = { ...source };
