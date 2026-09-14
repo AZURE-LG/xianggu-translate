@@ -223,7 +223,11 @@ function bindEvents() {
       startTranslation();
     }
   });
-  elements.retryButton.addEventListener("click", () => startTranslation({ retry: true }));
+  elements.retryButton.addEventListener("click", () => {
+    elements.retryButton.classList.add("is-retrying");
+    setTimeout(() => elements.retryButton.classList.remove("is-retrying"), 500);
+    startTranslation({ retry: true });
+  });
   elements.copyButton.addEventListener("click", copyOutput);
 
   elements.settingsButton.addEventListener("click", toggleSettings);

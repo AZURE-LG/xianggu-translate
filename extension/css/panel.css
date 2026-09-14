@@ -265,6 +265,32 @@ body[data-mode="options"] {
   overflow: auto;
 }
 
+html,
+body,
+.app-shell,
+.topbar,
+.settings-card,
+.compact-translation-field,
+.compact-source-field,
+.compact-result-field,
+.compact-swap-button,
+.compact-translate-button,
+.compact-model-button,
+.status,
+input,
+select,
+textarea,
+.segmented-control,
+.segment,
+.color-preset,
+.privacy-note,
+.settings-actions {
+  transition: background-color 260ms cubic-bezier(0.4, 0, 0.2, 1),
+              border-color 260ms cubic-bezier(0.4, 0, 0.2, 1),
+              color 260ms cubic-bezier(0.4, 0, 0.2, 1),
+              box-shadow 260ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
 button,
 input,
 select,
@@ -370,7 +396,7 @@ body[data-mode="options"] .app-shell {
 }
 
 .icon-button:active:not(:disabled) {
-  transform: scale(0.95);
+  transform: scale(0.92);
 }
 
 .icon-button:focus-visible,
@@ -395,28 +421,67 @@ textarea:focus-visible,
   stroke-linejoin: round;
 }
 
-.back-icon {
-  display: none;
+/* Theme Sun/Moon & Settings/Back Rotate Animations */
+.theme-toggle-button,
+#settingsButton {
+  position: relative;
+  overflow: hidden;
+}
+
+.theme-toggle-button .icon,
+#settingsButton .icon {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  margin-top: -8.5px;
+  margin-left: -8.5px;
+  transition: transform 340ms cubic-bezier(0.34, 1.56, 0.64, 1), opacity 240ms ease;
+}
+
+.theme-moon-icon {
+  opacity: 1;
+  transform: rotate(0deg) scale(1);
 }
 
 .theme-sun-icon {
-  display: none;
+  opacity: 0;
+  transform: rotate(90deg) scale(0.4);
+  pointer-events: none;
 }
 
 body[data-theme="dark"] .theme-moon-icon {
-  display: none;
+  opacity: 0;
+  transform: rotate(-90deg) scale(0.4);
+  pointer-events: none;
 }
 
 body[data-theme="dark"] .theme-sun-icon {
-  display: block;
+  opacity: 1;
+  transform: rotate(0deg) scale(1);
+  pointer-events: auto;
+}
+
+.settings-icon {
+  opacity: 1;
+  transform: rotate(0deg) scale(1);
+}
+
+.back-icon {
+  opacity: 0;
+  transform: rotate(-90deg) scale(0.4);
+  pointer-events: none;
 }
 
 #settingsButton.is-back .settings-icon {
-  display: none;
+  opacity: 0;
+  transform: rotate(90deg) scale(0.4);
+  pointer-events: none;
 }
 
 #settingsButton.is-back .back-icon {
-  display: block;
+  opacity: 1;
+  transform: rotate(0deg) scale(1);
+  pointer-events: auto;
 }
 
 /* Main Content Area */
@@ -478,6 +543,21 @@ body.request-running:not(.settings-open) .status:not(.error) {
   visibility: hidden;
 }
 
+.status:not(:empty) {
+  animation: status-pop-in 220ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes status-pop-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
 .status:not(:empty)::before {
   width: 6px;
   height: 6px;
@@ -514,6 +594,18 @@ body.settings-busy .status:not(:empty)::before {
   width: 100%;
   min-height: 0;
   flex: 1;
+  animation: workspace-fade-in 240ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes workspace-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .translator-workspace {
@@ -748,6 +840,32 @@ body.settings-busy .status:not(:empty)::before {
   color: var(--ink);
 }
 
+.compact-icon-action:active:not(:disabled) {
+  transform: scale(0.92);
+}
+
+.compact-icon-action#retryButton svg {
+  transition: transform 350ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.compact-icon-action#retryButton.is-retrying svg {
+  animation: spin-once 480ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+@keyframes spin-once {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+#clearInputButton svg {
+  transition: transform 200ms ease, color 200ms ease;
+}
+
+#clearInputButton:hover:not(:disabled) svg {
+  transform: rotate(90deg);
+  color: var(--danger);
+}
+
 .compact-text-action svg,
 .compact-icon-action svg,
 .compact-copy-action svg {
@@ -819,16 +937,17 @@ input::placeholder {
   font-size: 13px;
   font-weight: 700;
   box-shadow: 0 2px 6px color-mix(in srgb, var(--primary) 28%, transparent);
-  transition: background-color 140ms ease, box-shadow 140ms ease, transform 100ms ease;
+  transition: background-color 180ms ease, border-color 180ms ease, box-shadow 180ms ease, transform 120ms cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .compact-translate-button:hover:not(:disabled) {
   background: var(--primary-strong);
-  box-shadow: 0 4px 10px color-mix(in srgb, var(--primary) 38%, transparent);
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--primary) 38%, transparent);
+  transform: translateY(-1.5px);
 }
 
 .compact-translate-button:active:not(:disabled) {
-  transform: translateY(1px);
+  transform: scale(0.97) translateY(0);
 }
 
 .compact-translate-button svg {
@@ -912,7 +1031,14 @@ body.has-output:not(.request-running) .compact-result-field .result-state {
   border-color: var(--success);
   background: var(--success);
   color: #ffffff;
-  box-shadow: 0 1px 4px color-mix(in srgb, var(--success) 30%, transparent);
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--success) 35%, transparent);
+  animation: copy-pop 320ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes copy-pop {
+  0% { transform: scale(1); }
+  45% { transform: scale(1.08); }
+  100% { transform: scale(1); }
 }
 
 .compact-copy-action:disabled {
@@ -1409,12 +1535,17 @@ input:disabled {
   font-size: 11px;
   font-weight: 500;
   cursor: pointer;
-  transition: all 140ms ease;
+  transition: all 180ms cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .color-preset:hover {
   border-color: color-mix(in srgb, var(--primary) 36%, var(--line));
   color: var(--ink);
+  transform: translateY(-1px);
+}
+
+.color-preset:active {
+  transform: scale(0.95);
 }
 
 .color-preset[aria-checked="true"] {
@@ -1422,6 +1553,8 @@ input:disabled {
   background: var(--primary-soft);
   color: var(--primary-strong);
   font-weight: 700;
+  box-shadow: var(--shadow-xs);
+  transform: translateY(-1px);
 }
 
 .preset-swatches {
@@ -1500,18 +1633,23 @@ input:disabled {
   font-size: 11px;
   font-weight: 500;
   cursor: pointer;
-  transition: all 140ms ease;
+  transition: all 160ms ease;
 }
 
 .segment:hover {
   color: var(--ink);
 }
 
+.segment:active {
+  transform: scale(0.96);
+}
+
 .segment[aria-checked="true"] {
   background: var(--surface);
   color: var(--primary);
   font-weight: 700;
-  box-shadow: var(--shadow-xs);
+  box-shadow: 0 1px 4px rgb(0 0 0 / 0.08);
+  transform: scale(1.02);
 }
 
 /* Privacy Note */
