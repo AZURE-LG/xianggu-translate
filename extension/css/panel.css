@@ -316,20 +316,21 @@ body[data-mode="options"] .app-shell {
   gap: 8px;
 }
 
-.brand::before {
+.brand-badge {
   display: grid;
-  width: 26px;
-  height: 26px;
+  width: 28px;
+  height: 28px;
   place-items: center;
   border-radius: 7px;
   background: linear-gradient(135deg, var(--primary), var(--primary-strong));
   color: #ffffff;
-  content: "T";
-  font-family: var(--data-font);
-  font-size: 13px;
-  font-weight: 700;
-  letter-spacing: -0.04em;
-  box-shadow: 0 2px 6px color-mix(in srgb, var(--primary) 35%, transparent);
+  box-shadow: 0 2px 6px color-mix(in srgb, var(--primary) 32%, transparent);
+}
+
+.brand-logo {
+  width: 17px;
+  height: 17px;
+  fill: currentColor;
 }
 
 .brand-name {
@@ -1636,63 +1637,170 @@ input:disabled {
   }
 }
 
-@media (min-width: 680px) {
-  body[data-mode="options"] .settings-heading h1 {
-    font-size: 22px;
-    line-height: 28px;
-  }
+/* Options Mode Dedicated Styles */
+body[data-mode="options"] {
+  width: 100%;
+  min-width: 320px;
+  height: 100vh;
+  overflow-y: auto;
+}
 
-  body[data-mode="options"] .settings-grid {
+body[data-mode="options"] #openOptionsButton,
+body[data-mode="options"] #sidePanelButton {
+  display: none !important;
+}
+
+body[data-mode="options"] .app-shell {
+  width: min(860px, 92%);
+  min-height: 100vh;
+  height: auto;
+  margin-inline: auto;
+  background: transparent;
+}
+
+body[data-mode="options"] .topbar {
+  max-width: 860px;
+  margin-inline: auto;
+  border-radius: 0 0 12px 12px;
+  background: color-mix(in srgb, var(--surface) 88%, transparent);
+  border: 1px solid var(--line);
+  border-top: 0;
+}
+
+body[data-mode="options"] .content {
+  min-height: calc(100vh - 48px);
+  padding: 32px 0 64px;
+  gap: 20px;
+}
+
+body[data-mode="options"] .settings-heading {
+  padding: 0 4px 12px;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 4px;
+}
+
+body[data-mode="options"] .settings-heading h1 {
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 32px;
+}
+
+body[data-mode="options"] .settings-heading p {
+  margin-top: 5px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+body[data-mode="options"] .settings-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+body[data-mode="options"] .settings-card {
+  padding: 22px 26px;
+  border-radius: 14px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow-sm);
+  gap: 16px;
+}
+
+body[data-mode="options"] .settings-card h2 {
+  font-size: 16px;
+  font-weight: 700;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--line-subtle);
+  margin-bottom: 2px;
+}
+
+@media (min-width: 680px) {
+  body[data-mode="options"] .connection-card {
     display: grid;
-    grid-template-areas:
-      "connection preferences"
-      "connection sync"
-      "privacy privacy";
-    grid-template-columns: minmax(0, 1.25fr) minmax(240px, 0.75fr);
-    gap: 14px;
+    grid-template-columns: 240px minmax(0, 1fr);
+    gap: 16px 20px;
     align-items: start;
   }
 
-  body[data-mode="options"] .connection-card {
-    display: grid;
-    grid-area: connection;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 12px 14px;
-  }
-
-  body[data-mode="options"] .preferences-card {
-    grid-area: preferences;
-  }
-
-  body[data-mode="options"] .sync-card {
-    grid-area: sync;
-  }
-
-  body[data-mode="options"] .privacy-note {
-    grid-area: privacy;
-  }
-
   body[data-mode="options"] .connection-card h2,
+  body[data-mode="options"] .connection-card .field:has(#apiKey),
+  body[data-mode="options"] .connection-card .field:has(#model),
   body[data-mode="options"] .connection-card .field-warning,
   body[data-mode="options"] .connection-card .outline-button {
     grid-column: 1 / -1;
   }
 
+  body[data-mode="options"] .preferences-card {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px 20px;
+    align-items: start;
+  }
+
+  body[data-mode="options"] .preferences-card h2,
+  body[data-mode="options"] .preferences-card .preference-row,
+  body[data-mode="options"] .preferences-card .field:has(#colorPreset),
+  body[data-mode="options"] .preferences-card .field:has(#theme) {
+    grid-column: 1 / -1;
+  }
+
+  body[data-mode="options"] .color-preset-control {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  body[data-mode="options"] .sync-card {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px 20px;
+    align-items: start;
+  }
+
+  body[data-mode="options"] .sync-card h2,
+  body[data-mode="options"] .sync-card .preference-row,
+  body[data-mode="options"] .sync-card .field:has(#webDavUrl),
+  body[data-mode="options"] .sync-card .sync-note {
+    grid-column: 1 / -1;
+  }
+
+  body[data-mode="options"] .sync-actions {
+    grid-column: 1;
+  }
+
+  body[data-mode="options"] .sync-test-action {
+    grid-column: 2;
+    justify-content: flex-start;
+    align-items: center;
+  }
+
+  body[data-mode="options"] .privacy-note {
+    padding: 14px 18px;
+  }
+
   body[data-mode="options"] .settings-actions {
-    position: static;
+    position: sticky;
+    bottom: 0;
     display: flex;
     justify-content: flex-end;
-    margin: 0;
-    padding: 14px 0 0;
-    background: transparent;
-    backdrop-filter: none;
-    -webkit-backdrop-filter: none;
+    margin: 12px 0 0;
+    padding: 14px 20px;
+    border-radius: 12px;
+    border: 1px solid var(--line);
+    background: color-mix(in srgb, var(--surface) 92%, transparent);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    box-shadow: var(--shadow-md);
+    z-index: 25;
   }
 
   body[data-mode="options"] .save-button,
   body[data-mode="options"] .save-button::part(base) {
     width: auto;
-    min-width: 180px;
+    min-width: 220px;
+    min-height: 42px;
+    font-size: 14px;
+    font-weight: 700;
   }
 }
 

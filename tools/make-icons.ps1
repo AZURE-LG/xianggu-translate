@@ -10,19 +10,20 @@ foreach ($size in $sizes) {
     $graphics.SmoothingMode = [System.Drawing.Drawing2D.SmoothingMode]::AntiAlias
     $graphics.TextRenderingHint = [System.Drawing.Text.TextRenderingHint]::AntiAlias
 
-    $background = New-Object System.Drawing.SolidBrush ([System.Drawing.Color]::FromArgb(111, 79, 53))
-    $textBrush = New-Object System.Drawing.SolidBrush ([System.Drawing.Color]::FromArgb(255, 250, 242))
+    $background = New-Object System.Drawing.SolidBrush ([System.Drawing.Color]::FromArgb(37, 99, 235))
+    $textBrush = New-Object System.Drawing.SolidBrush ([System.Drawing.Color]::FromArgb(255, 255, 255))
     $graphics.FillRectangle($background, 0, 0, $size, $size)
 
-    $fontSize = [Math]::Max(9, [Math]::Round($size * 0.68))
+    $fontSize = [Math]::Max(9, [Math]::Round($size * 0.62))
     $font = New-Object System.Drawing.Font "Microsoft YaHei UI", $fontSize, ([System.Drawing.FontStyle]::Bold), ([System.Drawing.GraphicsUnit]::Pixel)
     $format = New-Object System.Drawing.StringFormat
     $format.Alignment = [System.Drawing.StringAlignment]::Center
     $format.LineAlignment = [System.Drawing.StringAlignment]::Center
     $rect = New-Object System.Drawing.RectangleF 0, 0, $size, $size
-    $graphics.DrawString("香", $font, $textBrush, $rect, $format)
+    $graphics.DrawString("译", $font, $textBrush, $rect, $format)
 
-    $path = Join-Path $iconDir "icon$size.png"
+    $fileName = "icon" + $size + ".png"
+    $path = Join-Path $iconDir $fileName
     $bitmap.Save($path, [System.Drawing.Imaging.ImageFormat]::Png)
 
     $graphics.Dispose()
