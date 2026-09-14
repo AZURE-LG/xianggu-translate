@@ -58,6 +58,8 @@ const state = {
   lastSourceLanguage: "",
   settingsBusy: false,
   ready: false,
+  nav: null,
+  error: null,
 };
 
 const elements = {};
@@ -101,6 +103,11 @@ function collectElements() {
     "copyButtonLabel",
     "retryButton",
     "status",
+    "errorCard",
+    "errorCategory",
+    "errorMessage",
+    "errorFixButton",
+    "errorRetryButton",
     "quickSourceLanguage",
     "quickTargetLanguage",
     "swapLanguagesButton",
@@ -225,6 +232,11 @@ function bindEvents() {
   });
   elements.retryButton.addEventListener("click", () => startTranslation({ retry: true }));
   elements.copyButton.addEventListener("click", copyOutput);
+  elements.errorFixButton.addEventListener("click", fixErrorFromCard);
+  elements.errorRetryButton.addEventListener("click", () => {
+    hideErrorCard();
+    startTranslation({ retry: true });
+  });
 
   elements.settingsButton.addEventListener("click", toggleSettings);
   elements.themeToggleButton.addEventListener("click", toggleQuickTheme);
@@ -510,16 +522,26 @@ async function saveSettings(event) {
 
   state.config = config;
   await saveConfig(config);
+  const nav = state.nav;
+  state.nav = null;
   if (state.mode === "options") {
     showSettings();
   } else {
-    showTranslator();
+    returnToTranslator();
   }
   populateQuickLanguageSelectors(config.sourceLanguage, config.targetLanguage);
   updateAutoModeHint();
   updateStatus(usesPlainHttp(config.baseUrl)
     ? "设置已保存。注意：该地址通过 HTTP 明文传输。"
     : "设置已保存。");
+  if (nav?.autoRetry && state.mode !== "options") {
+    hideErrorCard();
+    if (state.lastRequestText) {
+      startTranslation({ retry: true });
+    } else if (elements.input.value.trim()) {
+      startTranslation();
+    }
+  }
 }
 
 async function requestPermission(baseUrl) {
@@ -807,6 +829,7 @@ function handleWorkerMessage(message) {
   if (message.type === "done") {
     state.running = false;
     setRunningState();
+    hideErrorCard();
     setOutput(message.translation);
     state.lastSourceLanguage = message.sourceLanguage;
     updateDetectedLanguage();
@@ -820,6 +843,7 @@ function handleWorkerMessage(message) {
   if (message.type === "stopped") {
     state.running = false;
     setRunningState();
+    hideErrorCard();
     updateStatus("已停止，可复制当前译文。");
     return;
   }
@@ -828,6 +852,7 @@ function handleWorkerMessage(message) {
     state.running = false;
     setRunningState();
     updateStatus(message.message, true);
+    showErrorCard(message.message);
   }
 }
 
@@ -928,7 +953,7 @@ function startTranslation(options = {}) {
     return;
   }
   if (!isConfigComplete(state.config)) {
-    showSettings();
+    openSettings({ from: "config-fix", autoRetry: true });
     updateStatus("配置不完整，请先完成设置。", true);
     return;
   }
@@ -942,6 +967,7 @@ function startTranslation(options = {}) {
   state.running = true;
   state.lastRequestText = text;
   state.lastSourceLanguage = "";
+  hideErrorCard();
   setRunningState();
   setOutput("");
   updateDetectedLanguage();
@@ -975,6 +1001,7 @@ function setRunningState() {
   elements.primaryButton.setAttribute("aria-label", state.running ? "停止翻译" : "开始翻译");
   elements.retryButton.disabled = state.running || !state.lastRequestText;
   elements.copyButton.disabled = !elements.output.textContent;
+  elements.errorRetryButton.disabled = state.running || !state.lastRequestText;
   document.body.classList.toggle("request-running", state.running);
   updateAutoModeHint();
   updateSwapState();
@@ -1147,18 +1174,45 @@ function updateBaseUrlWarning() {
 }
 
 function toggleSettings() {
-  const willShowSettings = elements.settings.hidden;
-  if (willShowSettings) {
-    fillSettingsForm(state.config);
-    showSettings();
-    elements.provider.focus();
+  if (elements.settings.hidden) {
+    openSettings({ from: "manual" });
   } else {
-    fillSettingsForm(state.config);
-    applyColorPreset(state.config.colorPreset);
-    applyTheme();
-    showTranslator();
-    elements.input.focus();
+    returnToTranslator();
   }
+}
+
+function openSettings(nav = { from: "manual" }) {
+  state.nav = nav;
+  fillSettingsForm(state.config);
+  showSettings();
+  const target = nav.focusField ? document.getElementById(nav.focusField) : null;
+  if (target) {
+    locateSettingsField(target);
+  } else {
+    elements.provider.focus();
+  }
+}
+
+function returnToTranslator() {
+  fillSettingsForm(state.config);
+  applyColorPreset(state.config.colorPreset);
+  applyTheme();
+  showTranslator();
+  elements.input.focus();
+  state.nav = null;
+}
+
+function locateSettingsField(input) {
+  const field = input.closest(".field");
+  const reduceMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
+  field?.scrollIntoView({ block: "center", behavior: reduceMotion ? "auto" : "smooth" });
+  input.focus({ preventScroll: true });
+  if (!field) return;
+  field.classList.remove("field-located");
+  void field.offsetWidth;
+  field.classList.add("field-located");
+  clearTimeout(state.fieldLocateTimer);
+  state.fieldLocateTimer = setTimeout(() => field.classList.remove("field-located"), 2400);
 }
 
 function showSettings() {
@@ -1197,9 +1251,7 @@ function updateModelShortcut() {
 }
 
 function openModelSettings() {
-  fillSettingsForm(state.config);
-  showSettings();
-  elements.model.focus();
+  openSettings({ from: "model-switch", focusField: "model" });
 }
 
 function selectedQuickSourceLanguage() {
@@ -1270,6 +1322,7 @@ function clearTranslation() {
   elements.input.value = "";
   state.lastRequestText = "";
   state.lastSourceLanguage = "";
+  hideErrorCard();
   setOutput("");
   updateCharCount();
   updateDetectedLanguage();
@@ -1324,6 +1377,53 @@ function updateStatus(message, isError = false) {
   scheduleSessionSave();
 }
 
+const ERROR_CLASSIFICATION_RULES = [
+  { pattern: /鉴权失败|API Key/, category: "鉴权问题", focusField: "apiKey" },
+  { pattern: /接口或模型不存在/, category: "模型问题", focusField: "model" },
+  { pattern: /检查模型|更换模型|模型名/, category: "模型问题", focusField: "model" },
+  { pattern: /请求被服务商拒绝/, category: "模型问题", focusField: "model" },
+  { pattern: /授权该地址|重新授权|权限/, category: "权限问题", focusField: "baseUrl" },
+  { pattern: /Base URL/, category: "网络问题", focusField: "baseUrl" },
+  { pattern: /请求过于频繁|额度不足|服务商暂时不可用/, category: "服务受限", focusField: null },
+  { pattern: /超时/, category: "网络问题", focusField: null },
+  { pattern: /无法连接服务商|网络/, category: "网络问题", focusField: "baseUrl" },
+];
+
+function classifyError(message) {
+  const text = String(message ?? "");
+  for (const rule of ERROR_CLASSIFICATION_RULES) {
+    if (rule.pattern.test(text)) {
+      return { category: rule.category, focusField: rule.focusField };
+    }
+  }
+  return { category: "翻译失败", focusField: null };
+}
+
+function showErrorCard(message) {
+  const { category, focusField } = classifyError(message);
+  state.error = { message, category, focusField };
+  elements.errorCategory.textContent = category;
+  elements.errorMessage.textContent = message;
+  elements.errorFixButton.hidden = !focusField;
+  elements.errorRetryButton.disabled = state.running || !state.lastRequestText;
+  elements.errorCard.hidden = false;
+  scheduleSessionSave();
+}
+
+function hideErrorCard() {
+  state.error = null;
+  if (!elements.errorCard.hidden) {
+    elements.errorCard.hidden = true;
+    scheduleSessionSave();
+  }
+}
+
+function fixErrorFromCard() {
+  const focusField = state.error?.focusField;
+  hideErrorCard();
+  openSettings({ from: "error-recovery", focusField, autoRetry: true });
+}
+
 function restoreSessionState() {
   if (!globalThis.chrome?.storage?.session) return Promise.resolve();
   return chrome.storage.session.get(`panel:${state.mode}`).then((result) => {
@@ -1335,6 +1435,9 @@ function restoreSessionState() {
     state.lastSourceLanguage = typeof saved.sourceLanguage === "string" ? saved.sourceLanguage : "";
     updateDetectedLanguage();
     state.lastRequestText = typeof saved.lastRequestText === "string" ? saved.lastRequestText : "";
+    if (saved.error && typeof saved.error.message === "string") {
+      showErrorCard(saved.error.message);
+    }
     updateStatus(saved.status || "", Boolean(saved.isError));
     updateCharCount();
     setRunningState();
@@ -1356,6 +1459,7 @@ function scheduleSessionSave() {
         status: elements.status.textContent,
         isError: elements.status.classList.contains("error"),
         lastRequestText: state.lastRequestText,
+        error: state.error,
       },
     }).catch((error) => console.error("会话状态保存失败", error));
   }, 150);

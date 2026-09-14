@@ -48,6 +48,17 @@
         <p id="status" class="status" role="status" aria-live="polite"></p>
 
         <section id="translator" class="workspace translator-workspace compact-translator">
+          <div id="errorCard" class="error-card" role="alert" hidden>
+            <div class="error-card-copy">
+              <span id="errorCategory" class="error-category"></span>
+              <span id="errorMessage" class="error-message"></span>
+            </div>
+            <div class="error-card-actions">
+              <button id="errorFixButton" class="error-card-button" type="button">去修复</button>
+              <button id="errorRetryButton" class="error-card-button" type="button" disabled>重试</button>
+            </div>
+          </div>
+
           <div class="compact-language-row" aria-label="翻译语言">
             <label class="compact-language-control">
               <span class="visually-hidden">源语言</span>

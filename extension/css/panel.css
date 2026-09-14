@@ -552,6 +552,89 @@ body.settings-busy .status:not(:empty)::before {
   background: var(--danger);
 }
 
+.error-card {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 9px 12px;
+  border: 1px solid color-mix(in srgb, var(--danger) 32%, transparent);
+  border-radius: var(--wa-border-radius-m);
+  background: var(--danger-soft);
+}
+
+.error-card[hidden] {
+  display: none;
+}
+
+.error-card-copy {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.error-category {
+  color: var(--danger);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.error-message {
+  color: var(--ink);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.error-card-actions {
+  display: flex;
+  flex: 0 0 auto;
+  gap: 6px;
+}
+
+.error-card-button {
+  padding: 4px 11px;
+  border: 1px solid color-mix(in srgb, var(--danger) 40%, transparent);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--danger);
+  cursor: pointer;
+  font: inherit;
+  font-size: 12px;
+  line-height: 18px;
+  transition: background-color 0.15s ease;
+}
+
+.error-card-button:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--danger) 12%, transparent);
+}
+
+.error-card-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.field-located {
+  border-radius: 10px;
+  animation: field-locate 2.2s ease-out;
+}
+
+@keyframes field-locate {
+  0% {
+    background: color-mix(in srgb, var(--warning) 20%, transparent);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--warning) 30%, transparent);
+  }
+  70% {
+    background: color-mix(in srgb, var(--warning) 12%, transparent);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--warning) 16%, transparent);
+  }
+  100% {
+    background: transparent;
+    box-shadow: 0 0 0 0 transparent;
+  }
+}
+
 .workspace {
   width: 100%;
   min-height: 0;
