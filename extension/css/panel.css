@@ -215,6 +215,56 @@ body[data-theme="dark"][data-color-preset="graphite"] {
   --action-ink: #090d16;
 }
 
+/* 2. Claude (人文温润暖陶 Terracotta) */
+body[data-color-preset="claude"] {
+  --primary: #c15f3e;
+  --primary-strong: #a84e31;
+  --primary-soft: #fdf8f5;
+  --primary-glow: rgb(193 95 62 / 0.16);
+  --target: #d97757;
+  --target-soft: #fdf8f5;
+  --action-fill: #c15f3e;
+  --action-hover: #a84e31;
+  --action-ink: #ffffff;
+}
+
+body[data-theme="dark"][data-color-preset="claude"] {
+  --primary: #e07a5f;
+  --primary-strong: #f4a28c;
+  --primary-soft: #271a15;
+  --primary-glow: rgb(224 122 95 / 0.22);
+  --target: #f29b80;
+  --target-soft: #271a15;
+  --action-fill: #e07a5f;
+  --action-hover: #f4a28c;
+  --action-ink: #090d16;
+}
+
+/* 3. ChatGPT (现代数字翠绿 OpenAI Sage Green) */
+body[data-color-preset="chatgpt"] {
+  --primary: #10a37f;
+  --primary-strong: #0e8c6d;
+  --primary-soft: #f0fdf9;
+  --primary-glow: rgb(16 163 127 / 0.16);
+  --target: #14b8a6;
+  --target-soft: #f0fdf9;
+  --action-fill: #10a37f;
+  --action-hover: #0e8c6d;
+  --action-ink: #ffffff;
+}
+
+body[data-theme="dark"][data-color-preset="chatgpt"] {
+  --primary: #10a37f;
+  --primary-strong: #34d399;
+  --primary-soft: #0d2820;
+  --primary-glow: rgb(16 163 127 / 0.22);
+  --target: #2dd4bf;
+  --target-soft: #0d2820;
+  --action-fill: #10a37f;
+  --action-hover: #34d399;
+  --action-ink: #090d16;
+}
+
 /* 2. Forest (翡翠云杉森林) */
 body[data-color-preset="forest"] {
   --primary: #059669;
@@ -1788,7 +1838,7 @@ select:focus-visible {
 /* 颜色预设磁贴选择器 (Color Presets) */
 .color-preset-control {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(92px, 1fr));
   gap: 6px;
 }
 
@@ -1796,8 +1846,9 @@ select:focus-visible {
   appearance: none;
   display: flex;
   min-width: 0;
-  min-height: 40px;
-  padding: 6px 6px;
+  height: 36px;
+  min-height: 36px;
+  padding: 4px 6px;
   align-items: center;
   justify-content: center;
   gap: 6px;
@@ -1847,6 +1898,10 @@ select:focus-visible {
 
 .color-preset[data-color-preset="graphite"] .preset-swatches i:first-child { background: #2563eb; }
 .color-preset[data-color-preset="graphite"] .preset-swatches i:last-child { background: #93c5fd; }
+.color-preset[data-color-preset="claude"] .preset-swatches i:first-child { background: #c15f3e; }
+.color-preset[data-color-preset="claude"] .preset-swatches i:last-child { background: #f4a28c; }
+.color-preset[data-color-preset="chatgpt"] .preset-swatches i:first-child { background: #10a37f; }
+.color-preset[data-color-preset="chatgpt"] .preset-swatches i:last-child { background: #6ee7b7; }
 .color-preset[data-color-preset="forest"] .preset-swatches i:first-child { background: #059669; }
 .color-preset[data-color-preset="forest"] .preset-swatches i:last-child { background: #6ee7b7; }
 .color-preset[data-color-preset="lake"] .preset-swatches i:first-child { background: #0284c7; }
@@ -2131,7 +2186,7 @@ body[data-mode="options"] .settings-card h2 {
   }
 
   body[data-mode="options"] .color-preset-control {
-    grid-template-columns: repeat(5, minmax(0, 1fr));
+    grid-template-columns: repeat(7, minmax(0, 1fr));
     gap: 8px;
   }
 

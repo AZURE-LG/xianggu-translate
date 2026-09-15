@@ -17,7 +17,7 @@ import {
 import { normalizeWebDavUrl } from "./webdav.js";
 
 const THEME_ORDER = ["system", "light", "dark"];
-const COLOR_PRESET_ORDER = ["graphite", "forest", "lake", "sunset", "lavender"];
+const COLOR_PRESET_ORDER = ["graphite", "claude", "chatgpt", "forest", "lake", "sunset", "lavender"];
 
 const DEFAULT_CONFIG = {
   version: 4,
@@ -1099,6 +1099,10 @@ function selectThemeChoice(value, preview, event) {
     button.tabIndex = selected ? 0 : -1;
   }
   if (preview) {
+    if (state.config) {
+      state.config.theme = choice;
+      void saveConfig(state.config);
+    }
     const trigger = event ?? elements.themeControl.querySelector(`[data-theme-choice="${choice}"]`);
     transitionTheme(choice, trigger);
   }
@@ -1126,7 +1130,13 @@ function selectColorPreset(value, preview) {
     button.setAttribute("aria-checked", String(selected));
     button.tabIndex = selected ? 0 : -1;
   }
-  if (preview) applyColorPreset(choice);
+  if (preview) {
+    if (state.config) {
+      state.config.colorPreset = choice;
+      void saveConfig(state.config);
+    }
+    applyColorPreset(choice);
+  }
 }
 
 function handleColorPresetKeydown(event) {
@@ -1149,7 +1159,8 @@ function applyColorPreset(value) {
 
 async function toggleQuickTheme(event) {
   if (!state.config) return;
-  const nextTheme = (requestedTheme ?? document.body.dataset.theme) === "dark" ? "light" : "dark";
+  const currentTheme = requestedTheme ?? document.body.dataset.theme;
+  const nextTheme = currentTheme === "dark" ? "light" : "dark";
   state.config.theme = nextTheme;
   selectThemeChoice(nextTheme, false);
   const pending = transitionTheme(nextTheme, event ?? elements.themeToggleButton);
@@ -1165,6 +1176,7 @@ let requestedTheme;
 async function transitionTheme(targetChoice, trigger) {
   const revision = ++themeRevision;
   requestedTheme = targetChoice;
+  workspaceGhost?.remove();
   themeAnimation?.cancel();
   themeSnapshot?.remove();
   if (reducedMotion()) {
@@ -1253,8 +1265,6 @@ function toggleSettings() {
     showSettings();
     elements.provider.focus({ preventScroll: true });
   } else {
-    applyColorPreset(state.config.colorPreset);
-    applyTheme();
     showTranslator();
     elements.input.focus();
   }
@@ -1265,8 +1275,6 @@ function showSettings() {
   document.body.classList.add("settings-open");
   switchWorkspace(elements.settings, elements.translator, 1);
   elements.settingsTitle.textContent = firstTime ? "开始连接" : "设置";
-  applyColorPreset(elements.colorPreset.value);
-  void applyTheme(elements.theme.value);
   elements.settingsIntro.textContent = firstTime
     ? "连接你自己的模型服务，不创建新账号。"
     : "返回时保留未保存的输入；保存后应用设置。";
@@ -1549,6 +1557,8 @@ function revealElement(element, visible, expand = false) {
 let workspaceGhost;
 function switchWorkspace(incoming, outgoing, direction) {
   if (!incoming.hidden) return;
+  themeSnapshot?.remove();
+  themeAnimation?.cancel();
   const previousGhostStyle = workspaceGhost?.isConnected && workspaceGhost.dataset.workspace === incoming.id
     ? getComputedStyle(workspaceGhost) : null;
   const incomingStart = previousGhostStyle
