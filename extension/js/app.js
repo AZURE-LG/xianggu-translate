@@ -1070,11 +1070,28 @@ async function copyOutput() {
   }
 }
 
-async function pasteInput() {
+async function ensureClipboardPermission() {
+  if (!globalThis.chrome?.permissions?.request) return true;
   try {
+    const has = await chrome.permissions.contains({ permissions: ["clipboardRead"] });
+    if (has) return true;
+    return await chrome.permissions.request({ permissions: ["clipboardRead"] });
+  } catch {
+    return false;
+  }
+}
+
+async function pasteInput() {
+  elements.input.focus();
+  const pasteKey = /mac/i.test(navigator.platform || navigator.userAgent) ? "⌘+V" : "Ctrl+V";
+  try {
+    const hasPermission = await ensureClipboardPermission();
+    if (!hasPermission) {
+      updateStatus(`需要剪贴板授权，或直接按 ${pasteKey} 粘贴。`, true);
+      return;
+    }
     const text = await navigator.clipboard.readText();
     if (!text) {
-      elements.input.focus();
       updateStatus("剪贴板中没有可粘贴的文本。");
       return;
     }
@@ -1085,7 +1102,7 @@ async function pasteInput() {
     updateStatus("已从剪贴板粘贴。");
   } catch {
     elements.input.focus();
-    updateStatus("无法直接读取剪贴板，请按 Ctrl+V 粘贴。", true);
+    updateStatus(`无法直接读取剪贴板，请按 ${pasteKey} 粘贴。`, true);
   }
 }
 

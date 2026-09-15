@@ -26,6 +26,9 @@
     "storage",
     "sidePanel"
   ],
+  "optional_permissions": [
+    "clipboardRead"
+  ],
   "host_permissions": [
     "https://api.openai.com/*",
     "https://api.deepseek.com/*",
