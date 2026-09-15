@@ -1341,10 +1341,12 @@ async function swapLanguages() {
   const target = normalizeTargetLanguage(state.config?.targetLanguage);
   if (state.running || source.type !== "preset" || target?.type !== "preset") return;
 
+  state.swapRotation = (state.swapRotation || 0) + 180;
+  elements.swapLanguagesButton.style.setProperty("--swap-rotation", `${state.swapRotation}deg`);
   elements.swapLanguagesButton.classList.add("animating");
   setTimeout(() => {
     elements.swapLanguagesButton.classList.remove("animating");
-  }, 350);
+  }, 380);
   const translatedText = elements.output.textContent.trim();
   state.config.sourceLanguage = { ...target };
   state.config.targetLanguage = { ...source };

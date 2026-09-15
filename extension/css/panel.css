@@ -514,8 +514,8 @@ body[data-mode="options"] .app-shell {
 
 .icon-button {
   display: inline-grid;
-  width: 36px;
-  height: 36px;
+  width: 34px;
+  height: 34px;
   padding: 0;
   place-items: center;
   border: 1px solid transparent;
@@ -523,11 +523,6 @@ body[data-mode="options"] .app-shell {
   background: transparent;
   color: var(--muted);
   transition: all var(--dur-quick) var(--ease-smooth);
-}
-
-#settingsButton {
-  width: 44px;
-  height: 44px;
 }
 
 .icon-button:hover:not(:disabled) {
@@ -745,11 +740,11 @@ body:not(.settings-open) .status.error {
 /* 顶部紧凑语言对调栏 */
 .compact-language-row {
   display: grid;
-  min-height: 40px;
-  grid-template-columns: minmax(0, 1fr) 40px minmax(0, 1fr);
+  min-height: 38px;
+  grid-template-columns: minmax(0, 1fr) 38px minmax(0, 1fr);
   align-items: center;
-  gap: 10px;
-  padding: 2px 2px;
+  gap: 8px;
+  padding: 0;
 }
 
 .compact-language-control {
@@ -811,11 +806,11 @@ wa-option:focus-visible {
   background-color: var(--surface-hover);
 }
 
-/* 交换语言按钮 (180° 弹性阻尼回旋) */
+/* 交换语言按钮 (连续平滑弹性阻尼回旋) */
 .compact-swap-button {
   display: grid;
-  width: 40px;
-  height: 40px;
+  width: 38px;
+  height: 38px;
   place-items: center;
   padding: 0;
   border: 1px solid var(--line);
@@ -824,25 +819,22 @@ wa-option:focus-visible {
   color: var(--muted);
   box-shadow: var(--shadow-xs);
   cursor: pointer;
-  transition: transform 280ms var(--ease-spring),
-              background-color var(--dur-quick) ease,
+  transition: background-color var(--dur-quick) ease,
               color var(--dur-quick) ease,
-              border-color var(--dur-quick) ease;
+              border-color var(--dur-quick) ease,
+              box-shadow var(--dur-quick) ease,
+              transform var(--dur-quick) ease;
 }
 
 .compact-swap-button:hover:not(:disabled) {
   border-color: color-mix(in srgb, var(--primary) 40%, var(--line));
   background: var(--primary-soft);
   color: var(--primary);
-  transform: rotate(180deg) scale(1.06);
-}
-
-.compact-swap-button.animating {
-  transform: rotate(180deg) scale(1.1);
+  box-shadow: 0 0 0 3px var(--primary-glow);
 }
 
 .compact-swap-button:active:not(:disabled) {
-  transform: rotate(180deg) scale(0.95);
+  transform: scale(0.92);
 }
 
 .compact-swap-button:disabled {
@@ -858,6 +850,8 @@ wa-option:focus-visible {
   stroke: currentColor;
   stroke-linecap: round;
   stroke-linejoin: round;
+  transform: rotate(var(--swap-rotation, 0deg));
+  transition: transform 380ms var(--ease-spring);
 }
 
 /* ==========================================================================
@@ -895,11 +889,12 @@ wa-option:focus-visible {
 
 .compact-field-heading {
   display: flex;
-  min-height: 48px;
+  min-height: 36px;
+  height: 36px;
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  padding: 4px 12px;
+  padding: 0 10px;
 }
 
 .compact-heading-main,
@@ -917,21 +912,22 @@ wa-option:focus-visible {
 
 .compact-heading-main strong {
   color: var(--ink);
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 
 /* 语言检测小徽章 (晶体高透微标) */
 .detected-language {
   display: inline-flex;
   align-items: center;
-  padding: 2px 7px;
-  border-radius: 6px;
+  padding: 1px 6px;
+  border-radius: 4px;
   background: var(--primary-soft);
   color: var(--primary-strong);
   font-family: var(--data-font);
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 600;
   letter-spacing: 0.02em;
   animation: badge-pop 200ms var(--ease-spring);
@@ -945,7 +941,7 @@ wa-option:focus-visible {
 .compact-heading-actions {
   flex: 0 0 auto;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
 }
 
 .compact-text-action,
@@ -962,17 +958,18 @@ wa-option:focus-visible {
 .compact-text-action,
 .compact-copy-action {
   justify-content: center;
-  gap: 6px;
+  gap: 5px;
 }
 
 .compact-text-action {
-  min-height: 32px;
-  padding: 0 10px;
+  height: 28px;
+  min-height: 28px;
+  padding: 0 8px;
   border: 1px solid var(--line);
-  border-radius: 7px;
+  border-radius: 6px;
   background: var(--surface);
   color: var(--muted);
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 600;
   transition: all var(--dur-quick) ease;
 }
@@ -990,12 +987,12 @@ wa-option:focus-visible {
 
 .compact-icon-action {
   display: grid;
-  width: 44px;
-  height: 44px;
+  width: 28px;
+  height: 28px;
   padding: 0;
   place-items: center;
   border: 1px solid transparent;
-  border-radius: 8px;
+  border-radius: 6px;
   background: transparent;
   color: var(--quiet);
   transition: all var(--dur-quick) ease;
@@ -1027,7 +1024,16 @@ wa-option:focus-visible {
   to { transform: rotate(360deg); }
 }
 
-/* 清空按钮旋转警告反馈 */
+/* 清空按钮弹性浮现与警告反馈 */
+#clearInputButton:not([hidden]) {
+  animation: action-pop 200ms var(--ease-spring);
+}
+
+@keyframes action-pop {
+  from { opacity: 0; transform: scale(0.7); }
+  to { opacity: 1; transform: scale(1); }
+}
+
 #clearInputButton svg {
   transition: transform 200ms ease, color 200ms ease;
 }
@@ -1144,18 +1150,19 @@ input::placeholder {
   position: relative;
   display: flex;
   width: 100%;
-  min-height: 44px;
-  flex: 0 0 44px;
+  height: 42px;
+  min-height: 42px;
+  flex: 0 0 42px;
   align-items: center;
   justify-content: center;
   gap: 10px;
   padding: 0 16px;
   overflow: hidden;
-  border-radius: 10px;
+  border-radius: 9px;
   border: 1px solid transparent;
   background: var(--action-fill);
   color: var(--action-ink);
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 700;
   box-shadow: 0 2px 8px var(--primary-glow);
   transition: background-color 180ms ease,
@@ -1269,16 +1276,17 @@ body.has-output:not(.request-running) .compact-result-field .result-state {
 /* 复制按钮形态变身（Copy Morph） */
 .compact-copy-action {
   position: relative;
-  min-height: 44px;
-  min-width: 72px;
-  padding: 0 12px;
+  height: 28px;
+  min-height: 28px;
+  min-width: 58px;
+  padding: 0 8px;
   border: 1px solid var(--line);
-  border-radius: 8px;
+  border-radius: 6px;
   background: var(--surface);
   color: var(--muted);
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 600;
-  gap: 6px;
+  gap: 5px;
   transition: all 160ms var(--ease-smooth);
 }
 
@@ -1740,22 +1748,23 @@ select:focus-visible {
 
 .outline-button {
   width: 100%;
-  --wa-form-control-height: 34px;
+  --wa-form-control-height: 36px;
 }
 
 .outline-button::part(base) {
   width: 100%;
-  min-height: 34px;
+  min-height: 36px;
   justify-content: center;
   border-radius: 8px;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
 }
 
 .field-warning {
-  margin: -2px 0 0;
+  margin: 0;
   color: var(--warning);
   font-size: 11px;
+  line-height: 1.4;
 }
 
 .preference-row {
@@ -1951,9 +1960,9 @@ select:focus-visible {
 }
 
 .sync-note {
-  margin: -2px 0 0;
+  margin: 0;
   color: var(--quiet);
-  font-size: 10px;
+  font-size: 11px;
   line-height: 1.5;
 }
 
@@ -1988,7 +1997,7 @@ select:focus-visible {
   position: sticky;
   bottom: 0;
   margin-top: auto;
-  padding: 12px 0 4px;
+  padding: 10px 0 2px;
   border-top: 1px solid var(--line);
   background: color-mix(in srgb, var(--app-bg) 92%, transparent);
   backdrop-filter: blur(14px);
@@ -1999,17 +2008,27 @@ select:focus-visible {
 .save-button {
   display: block;
   width: 100%;
-  --wa-form-control-height: 40px;
+  --wa-form-control-height: 42px;
 }
 
 .save-button::part(base) {
   width: 100%;
-  min-height: 40px;
+  min-height: 42px;
   justify-content: center;
   border-radius: 8px;
   font-size: 13px;
   font-weight: 700;
   box-shadow: 0 2px 8px color-mix(in srgb, var(--primary) 30%, transparent);
+  transition: transform 140ms var(--ease-spring), box-shadow 140ms ease;
+}
+
+.save-button:hover:not([disabled])::part(base) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px color-mix(in srgb, var(--primary) 40%, transparent);
+}
+
+.save-button:active:not([disabled])::part(base) {
+  transform: scale(0.98);
 }
 
 /* ==========================================================================
@@ -2283,17 +2302,19 @@ body[data-mode="sidepanel"] .compact-result-field {
   }
 }
 
-/* 统一触控目标与无障碍尺寸保障 */
-#settingsButton,
-#copyButton,
-#retryButton,
-#clearInputButton {
-  min-width: 44px;
-  min-height: 44px;
+/* 触控模式下的触控目标尺寸保障 */
+@media (pointer: coarse) {
+  #settingsButton,
+  #copyButton,
+  #retryButton,
+  #clearInputButton {
+    min-width: 44px;
+    min-height: 44px;
+  }
 }
 
 #primaryButton {
-  min-height: 44px;
+  min-height: 42px;
 }
 
 /* 严谨的文字对比度保障（满足 WCAG AA 4.5:1+ 验收） */
