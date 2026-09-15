@@ -52,6 +52,7 @@
       <main class="content">
         <p id="status" class="status" role="status" aria-live="polite"></p>
 
+        <!-- 主翻译工作台 -->
         <section id="translator" class="workspace translator-workspace compact-translator">
           <div class="compact-language-row" aria-label="翻译语言">
             <label class="compact-language-control">
@@ -71,6 +72,7 @@
             </label>
           </div>
 
+          <!-- 原文输入区 -->
           <section class="compact-translation-field compact-source-field" aria-labelledby="sourceFieldTitle">
             <div class="compact-field-heading">
               <span class="compact-heading-main">
@@ -95,12 +97,14 @@
             </div>
           </section>
 
+          <!-- 翻译与停止主操作按钮 -->
           <button id="primaryButton" class="translate-button compact-translate-button" type="button" aria-label="开始翻译">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h8M8 3v2M6 5c.6 3.1 2.4 5.6 5.2 7M10.5 5c-.7 2.5-2.3 4.6-4.8 6.2M13 19l4-10 4 10M14.5 15h5"></path></svg>
             <span id="primaryButtonLabel">翻译</span>
             <span class="compact-shortcut">Ctrl ↵</span>
           </button>
 
+          <!-- 译文结果区 -->
           <section class="compact-translation-field compact-result-field" aria-labelledby="resultFieldTitle">
             <div class="compact-field-heading">
               <span class="compact-heading-main">
@@ -112,7 +116,8 @@
                   <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 1 0-2.35 5.65"></path><path d="M20 4v7h-7"></path></svg>
                 </button>
                 <button id="copyButton" class="compact-copy-action" type="button" aria-label="复制译文">
-                  <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="10" height="11" rx="1"></rect><path d="M15 9V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h4"></path></svg>
+                  <svg class="copy-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="10" height="11" rx="1"></rect><path d="M15 9V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h4"></path></svg>
+                  <svg class="check-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6L9 17l-5-5"></path></svg>
                   <span id="copyButtonLabel">复制</span>
                 </button>
               </span>
@@ -120,6 +125,7 @@
             <div id="output" class="output" tabindex="0" aria-label="翻译结果"></div>
           </section>
 
+          <!-- 底部模型快捷展示 -->
           <footer class="compact-model-bar">
             <span>使用模型</span>
             <button id="modelShortcutButton" class="compact-model-button" type="button" aria-label="修改使用模型">
@@ -129,6 +135,7 @@
           </footer>
         </section>
 
+        <!-- 设置工作区 -->
         <section id="settings" class="workspace settings-workspace" hidden>
           <form id="settingsForm" autocomplete="off">
             <header class="settings-heading">
@@ -145,163 +152,166 @@
             </header>
 
             <div class="settings-grid">
-            <section class="settings-card connection-card" aria-labelledby="connectionTitle">
-              <h2 id="connectionTitle">连接服务</h2>
+              <!-- 卡片 1: 连接服务 -->
+              <section class="settings-card connection-card" aria-labelledby="connectionTitle">
+                <h2 id="connectionTitle">连接服务</h2>
 
-              <label class="field">
-                <span class="field-label">服务商 <small>SERVICE PROVIDER</small></span>
-                <select id="provider"></select>
-              </label>
+                <label class="field">
+                  <span class="field-label">服务商 <small>SERVICE PROVIDER</small></span>
+                  <select id="provider"></select>
+                </label>
 
-              <label class="field">
-                <span class="field-label">服务地址 <small>BASE URL</small></span>
-                <input id="baseUrl" type="text" spellcheck="false" placeholder="https://api.example.com/v1">
-              </label>
-              <p id="baseUrlWarning" class="field-warning" hidden>该地址使用 HTTP，输入内容和密钥会明文传输。</p>
+                <label class="field">
+                  <span class="field-label">服务地址 <small>BASE URL</small></span>
+                  <input id="baseUrl" type="text" spellcheck="false" placeholder="https://api.example.com/v1">
+                </label>
+                <p id="baseUrlWarning" class="field-warning" hidden>该地址使用 HTTP，输入内容和密钥会明文传输。</p>
 
-              <label class="field">
-                <span class="field-label field-label-row">
-                  <span>密钥 <small>API KEY</small></span>
-                  <span class="inline-actions">
-                    <button id="toggleApiKey" class="text-action" type="button">显示</button>
-                    <button id="clearApiKey" class="text-action danger-text" type="button">清空</button>
+                <label class="field">
+                  <span class="field-label field-label-row">
+                    <span>密钥 <small>API KEY</small></span>
+                    <span class="inline-actions">
+                      <button id="toggleApiKey" class="text-action" type="button">显示</button>
+                      <button id="clearApiKey" class="text-action danger-text" type="button">清空</button>
+                    </span>
                   </span>
-                </span>
-                <input id="apiKey" class="technical-input" type="password" spellcheck="false" autocomplete="new-password" placeholder="sk-••••••••">
-              </label>
+                  <input id="apiKey" class="technical-input" type="password" spellcheck="false" autocomplete="new-password" placeholder="sk-••••••••">
+                </label>
 
-              <div class="field">
-                <label class="field-label" for="model">模型 <small>MODEL NAME</small></label>
-                <span class="model-row">
-                  <span class="model-input-control">
-                    <input id="model" class="technical-input" type="text" spellcheck="false" placeholder="输入或选择模型名" aria-controls="modelPickerList" aria-autocomplete="list">
-                    <button id="modelPickerButton" class="model-picker-button" type="button" aria-label="打开模型下拉列表" aria-haspopup="listbox" aria-controls="modelPickerList" aria-expanded="false" disabled>
-                      <svg viewBox="0 0 16 16" aria-hidden="true"><path d="m4 6 4 4 4-4"></path></svg>
+                <div class="field">
+                  <label class="field-label" for="model">模型 <small>MODEL NAME</small></label>
+                  <span class="model-row">
+                    <span class="model-input-control">
+                      <input id="model" class="technical-input" type="text" spellcheck="false" placeholder="输入或选择模型名" aria-controls="modelPickerList" aria-autocomplete="list">
+                      <button id="modelPickerButton" class="model-picker-button" type="button" aria-label="打开模型下拉列表" aria-haspopup="listbox" aria-controls="modelPickerList" aria-expanded="false" disabled>
+                        <svg viewBox="0 0 16 16" aria-hidden="true"><path d="m4 6 4 4 4-4"></path></svg>
+                      </button>
+                      <span id="modelPickerList" class="model-picker-list" role="listbox" aria-label="可用模型" hidden></span>
+                    </span>
+                    <wa-button id="loadModelButton" class="compact-button" variant="neutral" appearance="filled-outlined" size="s">获取模型</wa-button>
+                  </span>
+                </div>
+                <datalist id="modelOptions"></datalist>
+
+                <wa-button id="testTranslationButton" class="outline-button" variant="brand" appearance="outlined" size="s">测试翻译</wa-button>
+              </section>
+
+              <!-- 卡片 2: 翻译偏好 -->
+              <section class="settings-card preferences-card" aria-labelledby="preferencesTitle">
+                <h2 id="preferencesTitle">翻译偏好</h2>
+
+                <label class="field">
+                  <span class="field-label">默认目标语言 <small>DEFAULT TARGET</small></span>
+                  <select id="targetLanguage"></select>
+                </label>
+
+                <label class="field">
+                  <span class="field-label">自定义目标语言 <small>CUSTOM TARGET</small></span>
+                  <input id="customTargetLanguage" type="text" maxlength="40" placeholder="例如：古典拉丁语">
+                </label>
+
+                <div class="preference-row">
+                  <span>自动翻译</span>
+                  <wa-switch id="settingsAutoTranslate" size="s" aria-label="自动翻译"></wa-switch>
+                </div>
+
+                <div class="field">
+                  <span class="field-label">颜色预设 <small>COLOR PRESET</small></span>
+                  <select id="colorPreset" hidden aria-hidden="true" tabindex="-1">
+                    <option value="graphite">石墨</option>
+                    <option value="forest">森林</option>
+                    <option value="lake">湖景</option>
+                    <option value="sunset">晚霞</option>
+                    <option value="lavender">薰衣草</option>
+                  </select>
+                  <div id="colorPresetControl" class="color-preset-control" role="radiogroup" aria-label="颜色预设">
+                    <button class="color-preset" type="button" role="radio" data-color-preset="graphite">
+                      <span class="preset-swatches" aria-hidden="true"><i></i><i></i></span>
+                      <span>石墨</span>
                     </button>
-                    <span id="modelPickerList" class="model-picker-list" role="listbox" aria-label="可用模型" hidden></span>
+                    <button class="color-preset" type="button" role="radio" data-color-preset="forest">
+                      <span class="preset-swatches" aria-hidden="true"><i></i><i></i></span>
+                      <span>森林</span>
+                    </button>
+                    <button class="color-preset" type="button" role="radio" data-color-preset="lake">
+                      <span class="preset-swatches" aria-hidden="true"><i></i><i></i></span>
+                      <span>湖景</span>
+                    </button>
+                    <button class="color-preset" type="button" role="radio" data-color-preset="sunset">
+                      <span class="preset-swatches" aria-hidden="true"><i></i><i></i></span>
+                      <span>晚霞</span>
+                    </button>
+                    <button class="color-preset" type="button" role="radio" data-color-preset="lavender">
+                      <span class="preset-swatches" aria-hidden="true"><i></i><i></i></span>
+                      <span>薰衣草</span>
+                    </button>
+                  </div>
+                </div>
+
+                <div class="field">
+                  <span class="field-label">明暗主题 <small>APPEARANCE</small></span>
+                  <select id="theme" hidden aria-hidden="true" tabindex="-1">
+                    <option value="system">跟随系统</option>
+                    <option value="light">浅色</option>
+                    <option value="dark">深色</option>
+                  </select>
+                  <div id="themeControl" class="segmented-control" role="radiogroup" aria-label="主题">
+                    <button class="segment" type="button" role="radio" data-theme-choice="system">跟随系统</button>
+                    <button class="segment" type="button" role="radio" data-theme-choice="light">浅色</button>
+                    <button class="segment" type="button" role="radio" data-theme-choice="dark">深色</button>
+                  </div>
+                </div>
+              </section>
+
+              <!-- 卡片 3: WebDAV 同步 -->
+              <section class="settings-card sync-card" aria-labelledby="syncTitle">
+                <h2 id="syncTitle">WebDAV 同步</h2>
+
+                <div class="preference-row">
+                  <span>启用 WebDAV</span>
+                  <wa-switch id="webDavEnabled" size="s" aria-label="启用 WebDAV 同步"></wa-switch>
+                </div>
+
+                <label class="field">
+                  <span class="field-label">WebDAV 服务地址 <small>WEBDAV SERVICE URL</small></span>
+                  <input id="webDavUrl" class="technical-input" type="url" spellcheck="false" placeholder="https://dav.example.com/dav">
+                </label>
+
+                <label class="field">
+                  <span class="field-label">用户名 <small>USERNAME</small></span>
+                  <input id="webDavUsername" type="text" spellcheck="false" autocomplete="username">
+                </label>
+
+                <label class="field">
+                  <span class="field-label field-label-row">
+                    <span>密码 <small>PASSWORD</small></span>
+                    <button id="toggleWebDavPassword" class="text-action" type="button">显示</button>
                   </span>
-                  <wa-button id="loadModelButton" class="compact-button" variant="neutral" appearance="filled-outlined" size="s">获取模型</wa-button>
-                </span>
-              </div>
-              <datalist id="modelOptions"></datalist>
+                  <input id="webDavPassword" class="technical-input" type="password" spellcheck="false" autocomplete="current-password">
+                </label>
 
-              <wa-button id="testTranslationButton" class="outline-button" variant="brand" appearance="outlined" size="s">测试翻译</wa-button>
-            </section>
-
-            <section class="settings-card preferences-card" aria-labelledby="preferencesTitle">
-              <h2 id="preferencesTitle">翻译偏好</h2>
-
-              <label class="field">
-                <span class="field-label">默认目标语言 <small>DEFAULT TARGET</small></span>
-                <select id="targetLanguage"></select>
-              </label>
-
-              <label class="field">
-                <span class="field-label">自定义目标语言 <small>CUSTOM TARGET</small></span>
-                <input id="customTargetLanguage" type="text" maxlength="40" placeholder="例如：古典拉丁语">
-              </label>
-
-              <div class="preference-row">
-                <span>自动翻译</span>
-                <wa-switch id="settingsAutoTranslate" size="s" aria-label="自动翻译"></wa-switch>
-              </div>
-
-              <div class="field">
-                <span class="field-label">颜色预设 <small>COLOR PRESET</small></span>
-                <select id="colorPreset" hidden aria-hidden="true" tabindex="-1">
-                  <option value="graphite">石墨</option>
-                  <option value="forest">森林</option>
-                  <option value="lake">湖景</option>
-                  <option value="sunset">晚霞</option>
-                  <option value="lavender">薰衣草</option>
-                </select>
-                <div id="colorPresetControl" class="color-preset-control" role="radiogroup" aria-label="颜色预设">
-                  <button class="color-preset" type="button" role="radio" data-color-preset="graphite">
-                    <span class="preset-swatches" aria-hidden="true"><i></i><i></i></span>
-                    <span>石墨</span>
-                  </button>
-                  <button class="color-preset" type="button" role="radio" data-color-preset="forest">
-                    <span class="preset-swatches" aria-hidden="true"><i></i><i></i></span>
-                    <span>森林</span>
-                  </button>
-                  <button class="color-preset" type="button" role="radio" data-color-preset="lake">
-                    <span class="preset-swatches" aria-hidden="true"><i></i><i></i></span>
-                    <span>湖景</span>
-                  </button>
-                  <button class="color-preset" type="button" role="radio" data-color-preset="sunset">
-                    <span class="preset-swatches" aria-hidden="true"><i></i><i></i></span>
-                    <span>晚霞</span>
-                  </button>
-                  <button class="color-preset" type="button" role="radio" data-color-preset="lavender">
-                    <span class="preset-swatches" aria-hidden="true"><i></i><i></i></span>
-                    <span>薰衣草</span>
-                  </button>
+                <div class="preference-row">
+                  <span>同步 API Key</span>
+                  <wa-switch id="webDavIncludeApiKey" size="s" aria-label="同步 API Key"></wa-switch>
                 </div>
-              </div>
 
-              <div class="field">
-                <span class="field-label">明暗主题 <small>APPEARANCE</small></span>
-                <select id="theme" hidden aria-hidden="true" tabindex="-1">
-                  <option value="system">跟随系统</option>
-                  <option value="light">浅色</option>
-                  <option value="dark">深色</option>
-                </select>
-                <div id="themeControl" class="segmented-control" role="radiogroup" aria-label="主题">
-                  <button class="segment" type="button" role="radio" data-theme-choice="system">跟随系统</button>
-                  <button class="segment" type="button" role="radio" data-theme-choice="light">浅色</button>
-                  <button class="segment" type="button" role="radio" data-theme-choice="dark">深色</button>
+                <div class="sync-actions">
+                  <wa-button id="uploadWebDavButton" class="compact-button" variant="brand" appearance="outlined" size="s">上传本机</wa-button>
+                  <wa-button id="downloadWebDavButton" class="compact-button" variant="neutral" appearance="filled-outlined" size="s">下载远端</wa-button>
                 </div>
-              </div>
-            </section>
+                <div class="sync-test-action">
+                  <wa-button id="testWebDavButton" class="compact-button" variant="neutral" appearance="plain" size="s">测试连接</wa-button>
+                </div>
+                <p class="sync-note">内部使用 xianggu-translate/config.json。上传会覆盖远端文件，下载会覆盖本机配置；WebDAV 凭据仅保存在本机。</p>
+              </section>
 
-            <section class="settings-card sync-card" aria-labelledby="syncTitle">
-              <h2 id="syncTitle">WebDAV 同步</h2>
-
-              <div class="preference-row">
-                <span>启用 WebDAV</span>
-                <wa-switch id="webDavEnabled" size="s" aria-label="启用 WebDAV 同步"></wa-switch>
-              </div>
-
-              <label class="field">
-                <span class="field-label">WebDAV 服务地址 <small>WEBDAV SERVICE URL</small></span>
-                <input id="webDavUrl" class="technical-input" type="url" spellcheck="false" placeholder="https://dav.example.com/dav">
-              </label>
-
-              <label class="field">
-                <span class="field-label">用户名 <small>USERNAME</small></span>
-                <input id="webDavUsername" type="text" spellcheck="false" autocomplete="username">
-              </label>
-
-              <label class="field">
-                <span class="field-label field-label-row">
-                  <span>密码 <small>PASSWORD</small></span>
-                  <button id="toggleWebDavPassword" class="text-action" type="button">显示</button>
-                </span>
-                <input id="webDavPassword" class="technical-input" type="password" spellcheck="false" autocomplete="current-password">
-              </label>
-
-              <div class="preference-row">
-                <span>同步 API Key</span>
-                <wa-switch id="webDavIncludeApiKey" size="s" aria-label="同步 API Key"></wa-switch>
-              </div>
-
-              <div class="sync-actions">
-                <wa-button id="uploadWebDavButton" class="compact-button" variant="brand" appearance="outlined" size="s">上传本机</wa-button>
-                <wa-button id="downloadWebDavButton" class="compact-button" variant="neutral" appearance="filled-outlined" size="s">下载远端</wa-button>
-              </div>
-              <div class="sync-test-action">
-                <wa-button id="testWebDavButton" class="compact-button" variant="neutral" appearance="plain" size="s">测试连接</wa-button>
-              </div>
-              <p class="sync-note">内部使用 xianggu-translate/config.json。上传会覆盖远端文件，下载会覆盖本机配置；WebDAV 凭据仅保存在本机。</p>
-            </section>
-
-            <aside class="privacy-note">
-              <svg class="privacy-icon" viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M12 3 5 6v5c0 4.6 2.9 8 7 10 4.1-2 7-5.4 7-10V6l-7-3Z"></path>
-                <path d="M12 10v5M12 7.5v.5"></path>
-              </svg>
-              <p>API Key 与待翻译文本会发送到你配置的服务商地址。WebDAV 默认不同步 API Key，勾选后才会上传和下载；WebDAV 凭据和翻译内容不会写入。</p>
-            </aside>
+              <aside class="privacy-note">
+                <svg class="privacy-icon" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M12 3 5 6v5c0 4.6 2.9 8 7 10 4.1-2 7-5.4 7-10V6l-7-3Z"></path>
+                  <path d="M12 10v5M12 7.5v.5"></path>
+                </svg>
+                <p>API Key 与待翻译文本会发送到你配置的服务商地址。WebDAV 默认不同步 API Key，勾选后才会上传和下载；WebDAV 凭据和翻译内容不会写入。</p>
+              </aside>
             </div>
 
             <footer class="settings-actions">

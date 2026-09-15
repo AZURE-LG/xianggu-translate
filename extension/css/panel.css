@@ -16,34 +16,48 @@
 
 :root {
   color-scheme: light;
+  /* Modern Neutral Palette (Light) */
   --app-bg: #f8fafc;
   --surface: #ffffff;
   --surface-soft: #f1f5f9;
   --surface-hover: #e2e8f0;
-  --target-surface: #f8fafc;
+  --surface-active: #cbd5e1;
+  --target-surface: #f9fafb;
   --ink: #0f172a;
+  --ink-secondary: #334155;
   --muted: #64748b;
   --quiet: #94a3b8;
   --line: #e2e8f0;
   --line-subtle: #f1f5f9;
-  --primary: #2563eb;
-  --primary-strong: #1d4ed8;
-  --primary-soft: #eff6ff;
-  --target: #3b82f6;
-  --target-soft: #eff6ff;
+
+  /* Brand Emerald (Modern Product Direction) */
+  --primary: #059669;
+  --primary-strong: #047857;
+  --primary-soft: #ecfdf5;
+  --primary-glow: rgb(5 150 105 / 0.16);
+  --target: #10b981;
+  --target-soft: #ecfdf5;
+
+  /* Unified Semantic States */
   --success: #10b981;
   --success-soft: #ecfdf5;
-  --danger: #ef4444;
-  --danger-soft: #fef2f2;
   --warning: #f59e0b;
   --warning-soft: #fffbeb;
+  --danger: #ef4444;
+  --danger-soft: #fef2f2;
+  --danger-strong: #dc2626;
+
+  /* Elevation Shadows */
   --shadow-xs: 0 1px 2px 0 rgb(15 23 42 / 0.04);
   --shadow-sm: 0 1px 3px 0 rgb(15 23 42 / 0.06), 0 1px 2px -1px rgb(15 23 42 / 0.04);
   --shadow-md: 0 4px 6px -1px rgb(15 23 42 / 0.07), 0 2px 4px -2px rgb(15 23 42 / 0.04);
-  --shadow-lg: 0 10px 15px -3px rgb(15 23 42 / 0.08), 0 4px 6px -4px rgb(15 23 42 / 0.04);
+  --shadow-lg: 0 10px 18px -3px rgb(15 23 42 / 0.08), 0 4px 6px -4px rgb(15 23 42 / 0.04);
+
+  /* Typography */
   --body-font: "Hanken Grotesk Local", "Microsoft YaHei UI", "PingFang SC", "Noto Sans CJK SC", "Segoe UI", sans-serif;
   --data-font: "JetBrains Mono Local", "Cascadia Mono", Consolas, monospace;
 
+  /* Web Awesome Theme Tokens */
   --wa-font-family-body: var(--body-font);
   --wa-font-family-heading: var(--body-font);
   --wa-font-family-code: var(--data-font);
@@ -57,8 +71,8 @@
   --wa-color-brand-fill-quiet: var(--primary-soft);
   --wa-color-brand-fill-normal: var(--primary-soft);
   --wa-color-brand-fill-loud: var(--primary);
-  --wa-color-brand-border-quiet: #dbeafe;
-  --wa-color-brand-border-normal: #93c5fd;
+  --wa-color-brand-border-quiet: color-mix(in srgb, var(--primary) 22%, var(--line));
+  --wa-color-brand-border-normal: color-mix(in srgb, var(--primary) 50%, var(--line));
   --wa-color-brand-border-loud: var(--primary);
   --wa-color-brand-on-quiet: var(--primary-strong);
   --wa-color-brand-on-normal: var(--primary-strong);
@@ -73,36 +87,66 @@
   --wa-form-control-border-color: var(--line);
   --wa-form-control-background-color: var(--surface);
   --wa-form-control-value-color: var(--ink);
-  --wa-focus-ring: 0 0 0 3px color-mix(in srgb, var(--primary) 20%, transparent);
+  --wa-focus-ring: 0 0 0 3px var(--primary-glow);
 }
 
+:root[data-theme="dark"],
+html.wa-dark,
 body[data-theme="dark"] {
   color-scheme: dark;
+  /* Modern Neutral Palette (Dark - Obsidian / Slate) */
   --app-bg: #090d16;
   --surface: #111827;
-  --surface-soft: #1f2937;
-  --surface-hover: #374151;
-  --target-surface: #0c121e;
-  --ink: #f9fafb;
+  --surface-soft: #1a2234;
+  --surface-hover: #263249;
+  --surface-active: #33415c;
+  --target-surface: #0e1422;
+  --ink: #f8fafc;
+  --ink-secondary: #cbd5e1;
   --muted: #94a3b8;
   --quiet: #64748b;
   --line: #1e293b;
   --line-subtle: #162032;
-  --primary: #3b82f6;
-  --primary-strong: #60a5fa;
-  --primary-soft: #1e293b;
-  --target: #38bdf8;
-  --target-soft: #1e293b;
+
+  --primary: #10b981;
+  --primary-strong: #34d399;
+  --primary-soft: #064e3b;
+  --primary-glow: rgb(16 185 129 / 0.22);
+  --target: #34d399;
+  --target-soft: #064e3b;
+
   --success: #34d399;
   --success-soft: #064e3b;
-  --danger: #f87171;
-  --danger-soft: #450a0a;
   --warning: #fbbf24;
   --warning-soft: #451a03;
-  --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.2);
-  --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.3), 0 1px 2px -1px rgb(0 0 0 / 0.2);
-  --shadow-md: 0 6px 16px -2px rgb(0 0 0 / 0.4);
-  --shadow-lg: 0 12px 24px -4px rgb(0 0 0 / 0.5);
+  --danger: #f87171;
+  --danger-soft: #450a0a;
+  --danger-strong: #ef4444;
+
+  --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.24);
+  --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.35), 0 1px 2px -1px rgb(0 0 0 / 0.25);
+  --shadow-md: 0 6px 16px -2px rgb(0 0 0 / 0.45);
+  --shadow-lg: 0 12px 24px -4px rgb(0 0 0 / 0.55);
+
+  --wa-color-surface-raised: var(--surface);
+  --wa-color-surface-default: var(--surface);
+  --wa-color-surface-lowered: var(--surface-soft);
+  --wa-color-surface-border: var(--line);
+  --wa-color-text-normal: var(--ink);
+  --wa-color-text-quiet: var(--muted);
+  --wa-color-focus: var(--primary);
+  --wa-color-neutral-fill-quiet: var(--surface-soft);
+  --wa-color-neutral-fill-normal: var(--surface-hover);
+  --wa-color-neutral-fill-loud: var(--ink);
+  --wa-color-neutral-border-quiet: var(--line);
+  --wa-color-neutral-border-normal: var(--line);
+  --wa-color-neutral-border-loud: var(--line);
+  --wa-color-neutral-on-quiet: var(--muted);
+  --wa-color-neutral-on-normal: var(--ink);
+  --wa-color-neutral-on-loud: var(--surface);
+  --wa-form-control-border-color: var(--line);
+  --wa-form-control-background-color: var(--surface);
+  --wa-form-control-value-color: var(--ink);
   --wa-color-brand-border-quiet: #1e293b;
   --wa-color-brand-border-normal: #334155;
   --wa-color-brand-border-loud: var(--primary);
@@ -126,17 +170,19 @@ body.settings-open {
 body.settings-open[data-theme="dark"] {
   --app-bg: #090d16;
   --surface: #111827;
-  --surface-soft: #1f2937;
-  --surface-hover: #374151;
-  --target-surface: #0c121e;
+  --surface-soft: #1a2234;
+  --surface-hover: #263249;
+  --target-surface: #0e1422;
   --line: #1e293b;
 }
 
-/* Color Presets */
+/* 5 精细调色的现代颜色预设 (Color Presets) */
+/* 1. Graphite (现代石墨冷靛蓝) */
 body[data-color-preset="graphite"] {
   --primary: #2563eb;
   --primary-strong: #1d4ed8;
   --primary-soft: #eff6ff;
+  --primary-glow: rgb(37 99 235 / 0.16);
   --target: #3b82f6;
   --target-soft: #eff6ff;
 }
@@ -145,14 +191,17 @@ body[data-theme="dark"][data-color-preset="graphite"] {
   --primary: #3b82f6;
   --primary-strong: #60a5fa;
   --primary-soft: #1e293b;
+  --primary-glow: rgb(59 130 246 / 0.22);
   --target: #38bdf8;
   --target-soft: #1e293b;
 }
 
+/* 2. Forest (现代翡翠沉稳森林) */
 body[data-color-preset="forest"] {
   --primary: #059669;
   --primary-strong: #047857;
   --primary-soft: #ecfdf5;
+  --primary-glow: rgb(5 150 105 / 0.16);
   --target: #10b981;
   --target-soft: #ecfdf5;
 }
@@ -161,14 +210,17 @@ body[data-theme="dark"][data-color-preset="forest"] {
   --primary: #10b981;
   --primary-strong: #34d399;
   --primary-soft: #064e3b;
+  --primary-glow: rgb(16 185 129 / 0.22);
   --target: #34d399;
   --target-soft: #064e3b;
 }
 
+/* 3. Lake (现代冰川纯净湖景) */
 body[data-color-preset="lake"] {
   --primary: #0284c7;
   --primary-strong: #0369a1;
   --primary-soft: #f0f9ff;
+  --primary-glow: rgb(2 132 199 / 0.16);
   --target: #0ea5e9;
   --target-soft: #f0f9ff;
 }
@@ -177,14 +229,17 @@ body[data-theme="dark"][data-color-preset="lake"] {
   --primary: #38bdf8;
   --primary-strong: #7dd3fc;
   --primary-soft: #082f49;
+  --primary-glow: rgb(56 189 248 / 0.22);
   --target: #0ea5e9;
   --target-soft: #082f49;
 }
 
+/* 4. Sunset (极简暮光暖橙) */
 body[data-color-preset="sunset"] {
   --primary: #ea580c;
   --primary-strong: #c2410c;
   --primary-soft: #fff7ed;
+  --primary-glow: rgb(234 88 12 / 0.16);
   --target: #f97316;
   --target-soft: #fff7ed;
 }
@@ -193,14 +248,17 @@ body[data-theme="dark"][data-color-preset="sunset"] {
   --primary: #fb923c;
   --primary-strong: #fdba74;
   --primary-soft: #431407;
+  --primary-glow: rgb(251 146 60 / 0.22);
   --target: #f97316;
   --target-soft: #431407;
 }
 
+/* 5. Lavender (高雅数字薰衣草) */
 body[data-color-preset="lavender"] {
   --primary: #7c3aed;
   --primary-strong: #6d28d9;
   --primary-soft: #f5f3ff;
+  --primary-glow: rgb(124 58 237 / 0.16);
   --target: #8b5cf6;
   --target-soft: #f5f3ff;
 }
@@ -209,6 +267,7 @@ body[data-theme="dark"][data-color-preset="lavender"] {
   --primary: #a78bfa;
   --primary-strong: #c4b5fd;
   --primary-soft: #2e1065;
+  --primary-glow: rgb(167 139 250 / 0.22);
   --target: #8b5cf6;
   --target-soft: #2e1065;
 }
@@ -252,6 +311,11 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+body[data-mode="popup"] {
+  width: 416px;
+  height: 530px;
+}
+
 body[data-mode="sidepanel"] {
   width: 100%;
   min-width: 310px;
@@ -285,13 +349,12 @@ textarea,
 .color-preset,
 .privacy-note,
 .settings-actions {
-  transition: background-color 260ms cubic-bezier(0.4, 0, 0.2, 1),
-              border-color 260ms cubic-bezier(0.4, 0, 0.2, 1),
-              color 260ms cubic-bezier(0.4, 0, 0.2, 1),
-              box-shadow 260ms cubic-bezier(0.4, 0, 0.2, 1);
+  transition: background-color 220ms cubic-bezier(0.16, 1, 0.3, 1),
+              border-color 220ms cubic-bezier(0.16, 1, 0.3, 1),
+              color 220ms cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 220ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* View Transitions API (Circular Reveal Wave for Smooth Theme Toggle) */
 ::view-transition-old(root),
 ::view-transition-new(root) {
   animation: none;
@@ -333,13 +396,15 @@ button {
 }
 
 body[data-mode="options"] .app-shell {
-  width: min(780px, 100%);
+  width: min(840px, 100%);
   min-height: 100vh;
   height: auto;
   margin-inline: auto;
 }
 
-/* TopBar Header */
+/* ==========================================================================
+   TopBar Header (精致现代微顶栏)
+   ========================================================================== */
 .topbar {
   display: flex;
   min-height: 48px;
@@ -347,9 +412,9 @@ body[data-mode="options"] .app-shell {
   align-items: center;
   padding-inline: 14px;
   border-bottom: 1px solid var(--line);
-  background: color-mix(in srgb, var(--surface) 90%, transparent);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
+  background: color-mix(in srgb, var(--surface) 85%, transparent);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   flex: 0 0 auto;
   z-index: 20;
 }
@@ -359,7 +424,8 @@ body[data-mode="options"] .app-shell {
   min-width: 0;
   align-items: center;
   justify-content: flex-start;
-  gap: 8px;
+  gap: 9px;
+  user-select: none;
 }
 
 .brand-badge {
@@ -367,15 +433,20 @@ body[data-mode="options"] .app-shell {
   width: 28px;
   height: 28px;
   place-items: center;
-  border-radius: 7px;
+  border-radius: 8px;
   background: linear-gradient(135deg, var(--primary), var(--primary-strong));
   color: #ffffff;
-  box-shadow: 0 2px 6px color-mix(in srgb, var(--primary) 32%, transparent);
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--primary) 32%, transparent);
+  transition: transform 200ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.brand:hover .brand-badge {
+  transform: scale(1.06) rotate(3deg);
 }
 
 .brand-logo {
-  width: 17px;
-  height: 17px;
+  width: 16px;
+  height: 16px;
   fill: currentColor;
 }
 
@@ -384,7 +455,7 @@ body[data-mode="options"] .app-shell {
   color: var(--ink);
   font-size: 14px;
   font-weight: 700;
-  letter-spacing: -0.01em;
+  letter-spacing: -0.02em;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -402,15 +473,16 @@ body[data-mode="options"] .app-shell {
   height: 32px;
   padding: 0;
   place-items: center;
-  border: 0;
+  border: 1px solid transparent;
   border-radius: 8px;
   background: transparent;
   color: var(--muted);
   cursor: pointer;
-  transition: background-color 150ms ease, color 150ms ease, transform 100ms ease;
+  transition: all 150ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .icon-button:hover:not(:disabled) {
+  border-color: var(--line);
   background: var(--surface-hover);
   color: var(--ink);
 }
@@ -419,6 +491,7 @@ body[data-mode="options"] .app-shell {
   transform: scale(0.92);
 }
 
+/* 统一现代双层 Focus Ring */
 .icon-button:focus-visible,
 .swap-button:focus-visible,
 .segment:focus-visible,
@@ -441,7 +514,7 @@ textarea:focus-visible,
   stroke-linejoin: round;
 }
 
-/* Theme Sun/Moon & Settings/Back Rotate Animations */
+/* 主题太阳/月亮与设置平滑回旋动效 */
 .theme-toggle-button,
 #settingsButton {
   position: relative;
@@ -455,7 +528,7 @@ textarea:focus-visible,
   left: 50%;
   margin-top: -8.5px;
   margin-left: -8.5px;
-  transition: transform 340ms cubic-bezier(0.34, 1.56, 0.64, 1), opacity 240ms ease;
+  transition: transform 300ms cubic-bezier(0.34, 1.56, 0.64, 1), opacity 200ms ease;
 }
 
 .theme-moon-icon {
@@ -465,13 +538,13 @@ textarea:focus-visible,
 
 .theme-sun-icon {
   opacity: 0;
-  transform: rotate(90deg) scale(0.4);
+  transform: rotate(90deg) scale(0.3);
   pointer-events: none;
 }
 
 body[data-theme="dark"] .theme-moon-icon {
   opacity: 0;
-  transform: rotate(-90deg) scale(0.4);
+  transform: rotate(-90deg) scale(0.3);
   pointer-events: none;
 }
 
@@ -488,13 +561,13 @@ body[data-theme="dark"] .theme-sun-icon {
 
 .back-icon {
   opacity: 0;
-  transform: rotate(-90deg) scale(0.4);
+  transform: rotate(-90deg) scale(0.3);
   pointer-events: none;
 }
 
 #settingsButton.is-back .settings-icon {
   opacity: 0;
-  transform: rotate(90deg) scale(0.4);
+  transform: rotate(90deg) scale(0.3);
   pointer-events: none;
 }
 
@@ -504,7 +577,9 @@ body[data-theme="dark"] .theme-sun-icon {
   pointer-events: auto;
 }
 
-/* Main Content Area */
+/* ==========================================================================
+   Main Content & Inline Floating Status
+   ========================================================================== */
 .content {
   display: flex;
   min-height: 0;
@@ -516,17 +591,15 @@ body[data-theme="dark"] .theme-sun-icon {
 
 body[data-mode="options"] .content {
   min-height: calc(100vh - 48px);
-  padding: 24px 28px 32px;
+  padding: 24px 28px 36px;
 }
 
-/* Floating Status Message */
 body:not(.settings-open) .status {
   position: absolute;
   top: 54px;
-  left: 12px;
+  left: 14px;
   z-index: 30;
-  max-width: calc(100% - 24px);
-  box-shadow: var(--shadow-sm);
+  max-width: calc(100% - 28px);
   pointer-events: none;
 }
 
@@ -564,7 +637,7 @@ body.request-running:not(.settings-open) .status:not(.error) {
 }
 
 .status:not(:empty) {
-  animation: status-pop-in 220ms cubic-bezier(0.16, 1, 0.3, 1);
+  animation: status-pop-in 200ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 @keyframes status-pop-in {
@@ -589,12 +662,12 @@ body.request-running:not(.settings-open) .status:not(.error) {
 
 body.request-running .status:not(:empty)::before,
 body.settings-busy .status:not(:empty)::before {
-  width: 12px;
-  height: 12px;
+  width: 11px;
+  height: 11px;
   border: 2px solid color-mix(in srgb, var(--primary) 25%, transparent);
   border-top-color: var(--primary);
   background: transparent;
-  animation: ui-spin 800ms linear infinite;
+  animation: ui-spin 700ms linear infinite;
 }
 
 .status.error {
@@ -609,18 +682,20 @@ body.settings-busy .status:not(:empty)::before {
   background: var(--danger);
 }
 
-/* Workspace Base */
+/* ==========================================================================
+   Translator Workspace (主翻译工作台)
+   ========================================================================== */
 .workspace {
   width: 100%;
   min-height: 0;
   flex: 1;
-  animation: workspace-fade-in 240ms cubic-bezier(0.16, 1, 0.3, 1);
+  animation: workspace-fade-in 220ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 @keyframes workspace-fade-in {
   from {
     opacity: 0;
-    transform: translateY(6px);
+    transform: translateY(4px);
   }
   to {
     opacity: 1;
@@ -634,11 +709,11 @@ body.settings-busy .status:not(:empty)::before {
   gap: 10px;
 }
 
-/* Compact Language Row */
+/* Compact Language Bar */
 .compact-language-row {
   display: grid;
-  min-height: 36px;
-  grid-template-columns: minmax(0, 1fr) 36px minmax(0, 1fr);
+  min-height: 38px;
+  grid-template-columns: minmax(0, 1fr) 38px minmax(0, 1fr);
   align-items: center;
   gap: 8px;
   padding: 2px 2px;
@@ -650,30 +725,31 @@ body.settings-busy .status:not(:empty)::before {
 
 .compact-language-control wa-select {
   width: 100%;
-  --wa-form-control-height: 34px;
-  --wa-form-control-padding-inline: 10px;
+  --wa-form-control-height: 36px;
+  --wa-form-control-padding-inline: 11px;
   --wa-form-control-background-color: var(--surface);
   --wa-form-control-border-color: var(--line);
   --wa-form-control-activated-color: var(--primary);
 }
 
 .compact-language-control wa-select::part(combobox) {
-  min-height: 34px;
+  min-height: 36px;
   border: 1px solid var(--line);
-  border-radius: 8px;
+  border-radius: 9px;
   background: var(--surface);
   box-shadow: var(--shadow-xs);
-  transition: border-color 150ms ease, box-shadow 150ms ease;
+  transition: all 160ms ease;
 }
 
 .compact-language-control wa-select:hover::part(combobox) {
-  border-color: color-mix(in srgb, var(--primary) 40%, var(--line));
+  border-color: color-mix(in srgb, var(--primary) 45%, var(--line));
 }
 
 .compact-language-control wa-select::part(display-input) {
   color: var(--ink);
   font-size: 13px;
   font-weight: 600;
+  letter-spacing: -0.01em;
 }
 
 .compact-language-control wa-select::part(expand-icon) {
@@ -688,10 +764,25 @@ body.settings-busy .status:not(:empty)::before {
   box-shadow: var(--shadow-lg);
 }
 
+.compact-language-control wa-select wa-option,
+wa-option {
+  color: var(--ink);
+  --wa-color-text-normal: var(--ink);
+}
+
+.compact-language-control wa-select wa-option:hover,
+.compact-language-control wa-select wa-option:focus-visible,
+wa-option:hover,
+wa-option:focus-visible {
+  color: var(--ink);
+  background-color: var(--surface-hover);
+}
+
+/* 交换语言按钮 (180°灵动旋转) */
 .compact-swap-button {
   display: grid;
-  width: 34px;
-  height: 34px;
+  width: 36px;
+  height: 36px;
   place-items: center;
   padding: 0;
   border: 1px solid var(--line);
@@ -700,7 +791,10 @@ body.settings-busy .status:not(:empty)::before {
   color: var(--muted);
   box-shadow: var(--shadow-xs);
   cursor: pointer;
-  transition: transform 260ms cubic-bezier(0.34, 1.56, 0.64, 1), background-color 150ms ease, color 150ms ease, border-color 150ms ease;
+  transition: transform 260ms cubic-bezier(0.34, 1.56, 0.64, 1),
+              background-color 150ms ease,
+              color 150ms ease,
+              border-color 150ms ease;
 }
 
 .compact-swap-button:hover:not(:disabled) {
@@ -730,7 +824,9 @@ body.settings-busy .status:not(:empty)::before {
   stroke-linejoin: round;
 }
 
-/* Translation Cards (Source & Result) */
+/* ==========================================================================
+   Translation Cards (原文与译文区)
+   ========================================================================== */
 .compact-translation-field {
   display: flex;
   min-height: 0;
@@ -750,11 +846,11 @@ body.settings-busy .status:not(:empty)::before {
 
 .compact-source-field:focus-within {
   border-color: var(--primary);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 14%, transparent);
+  box-shadow: 0 0 0 3px var(--primary-glow);
 }
 
 .compact-result-field {
-  min-height: 120px;
+  min-height: 124px;
   flex: 1;
   background: var(--target-surface);
 }
@@ -788,22 +884,23 @@ body.settings-busy .status:not(:empty)::before {
   letter-spacing: -0.01em;
 }
 
+/* 语言检测小徽章 (晶体小微标) */
 .detected-language {
   display: inline-flex;
   align-items: center;
   padding: 2px 7px;
   border-radius: 6px;
-  background: var(--surface-soft);
-  color: var(--muted);
+  background: var(--primary-soft);
+  color: var(--primary-strong);
   font-family: var(--data-font);
   font-size: 11px;
-  font-weight: 500;
+  font-weight: 600;
   letter-spacing: 0.02em;
 }
 
 .compact-heading-actions {
   flex: 0 0 auto;
-  gap: 4px;
+  gap: 5px;
 }
 
 .compact-text-action,
@@ -825,7 +922,7 @@ body.settings-busy .status:not(:empty)::before {
 
 .compact-text-action {
   min-height: 26px;
-  padding: 0 8px;
+  padding: 0 9px;
   border: 1px solid var(--line);
   border-radius: 6px;
   background: var(--surface);
@@ -909,7 +1006,7 @@ body.settings-busy .status:not(:empty)::before {
   background: transparent;
   color: var(--ink);
   font-size: 14px;
-  line-height: 1.6;
+  line-height: 1.62;
 }
 
 textarea::placeholder,
@@ -940,7 +1037,9 @@ input::placeholder {
   color: var(--danger);
 }
 
-/* Primary Translate Button */
+/* ==========================================================================
+   Primary Translate Button (核心流转枢纽)
+   ========================================================================== */
 .compact-translate-button {
   display: flex;
   width: 100%;
@@ -956,14 +1055,17 @@ input::placeholder {
   color: #ffffff;
   font-size: 13px;
   font-weight: 700;
-  box-shadow: 0 2px 6px color-mix(in srgb, var(--primary) 28%, transparent);
-  transition: background-color 180ms ease, border-color 180ms ease, box-shadow 180ms ease, transform 120ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-shadow: 0 2px 8px var(--primary-glow);
+  transition: background-color 180ms ease,
+              border-color 180ms ease,
+              box-shadow 180ms ease,
+              transform 120ms cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .compact-translate-button:hover:not(:disabled) {
   background: var(--primary-strong);
-  box-shadow: 0 4px 12px color-mix(in srgb, var(--primary) 38%, transparent);
-  transform: translateY(-1.5px);
+  box-shadow: 0 4px 14px var(--primary-glow);
+  transform: translateY(-1px);
 }
 
 .compact-translate-button:active:not(:disabled) {
@@ -984,28 +1086,29 @@ input::placeholder {
   padding: 2px 6px;
   border-radius: 4px;
   background: color-mix(in srgb, #000000 16%, transparent);
-  color: color-mix(in srgb, #ffffff 90%, transparent);
+  color: color-mix(in srgb, #ffffff 92%, transparent);
   font-family: var(--data-font);
   font-size: 10px;
   font-weight: 500;
   letter-spacing: 0.04em;
 }
 
+/* 正在请求状态下的停止按钮 */
 body.request-running .compact-translate-button {
   background: var(--danger);
   color: #ffffff;
-  box-shadow: 0 2px 6px color-mix(in srgb, var(--danger) 30%, transparent);
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--danger) 32%, transparent);
 }
 
 body.request-running .compact-translate-button:hover:not(:disabled) {
-  background: color-mix(in srgb, var(--danger) 85%, #000000);
+  background: var(--danger-strong);
 }
 
 body.request-running .compact-translate-button .compact-shortcut {
   background: color-mix(in srgb, #000000 22%, transparent);
 }
 
-/* Result Field Output */
+/* 译文结果状态与流式呼吸 */
 .compact-result-field .result-state {
   display: none;
   width: 6px;
@@ -1029,6 +1132,7 @@ body.has-output:not(.request-running) .compact-result-field .result-state {
   display: none;
 }
 
+/* 复制按钮内联变身反馈 (Inline feedback) */
 .compact-copy-action {
   min-height: 26px;
   padding: 0 9px;
@@ -1038,7 +1142,7 @@ body.has-output:not(.request-running) .compact-result-field .result-state {
   color: var(--muted);
   font-size: 11px;
   font-weight: 600;
-  transition: all 150ms ease;
+  transition: all 160ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .compact-copy-action:hover:not(:disabled) {
@@ -1052,7 +1156,19 @@ body.has-output:not(.request-running) .compact-result-field .result-state {
   background: var(--success);
   color: #ffffff;
   box-shadow: 0 2px 8px color-mix(in srgb, var(--success) 35%, transparent);
-  animation: copy-pop 320ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  animation: copy-pop 280ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.compact-copy-action .check-icon {
+  display: none;
+}
+
+.compact-copy-action.is-copied .copy-icon {
+  display: none;
+}
+
+.compact-copy-action.is-copied .check-icon {
+  display: inline-block;
 }
 
 @keyframes copy-pop {
@@ -1083,7 +1199,7 @@ body.has-output:not(.request-running) .compact-result-field .result-state {
   content: "译文会显示在这里…";
 }
 
-/* Streaming Blinking Cursor */
+/* 流式光标 */
 body.request-running .output:not(:empty)::after {
   display: inline-block;
   width: 2px;
@@ -1096,7 +1212,7 @@ body.request-running .output:not(:empty)::after {
   animation: cursor-pulse 750ms steps(2, jump-none) infinite;
 }
 
-/* Compact Model Bar */
+/* 底部模型快捷直达条 */
 .compact-model-bar {
   display: flex;
   min-height: 30px;
@@ -1159,7 +1275,7 @@ body.request-running .output:not(:empty)::after {
   outline-offset: 2px;
 }
 
-/* Sidepanel Mode Adaptations */
+/* 侧边栏模式适配 */
 body[data-mode="sidepanel"] .compact-source-field {
   min-height: 160px;
   flex: 1 1 160px;
@@ -1177,7 +1293,9 @@ select:disabled {
   cursor: not-allowed;
 }
 
-/* Settings Workspace */
+/* ==========================================================================
+   Settings Workspace (设置工作区)
+   ========================================================================== */
 .settings-workspace {
   overflow-y: auto;
   scrollbar-gutter: stable;
@@ -1361,6 +1479,7 @@ select {
   outline: 0;
   background: var(--surface-soft);
   color: var(--ink);
+  color-scheme: inherit;
   font-size: 13px;
   transition: border-color 140ms ease, background-color 140ms ease, box-shadow 140ms ease;
 }
@@ -1368,13 +1487,21 @@ select {
 option {
   background: var(--surface);
   color: var(--ink);
+  color-scheme: inherit;
+}
+
+body[data-theme="dark"] input,
+body[data-theme="dark"] select,
+body[data-theme="dark"] option,
+body[data-theme="dark"] textarea {
+  color-scheme: dark;
 }
 
 input:focus-visible,
 select:focus-visible {
   border-color: var(--primary);
   background: var(--surface);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 15%, transparent);
+  box-shadow: 0 0 0 3px var(--primary-glow);
 }
 
 input:disabled {
@@ -1532,7 +1659,7 @@ input:disabled {
   --thumb-size: 16px;
 }
 
-/* Color Preset Radiogroup */
+/* 颜色预设磁贴选择器 (Color Preset Tiles) */
 .color-preset-control {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -1632,7 +1759,7 @@ input:disabled {
   background: #c4b5fd;
 }
 
-/* Theme Segmented Control */
+/* 主题分段控制器 (Segmented Control) */
 .segmented-control {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -1672,7 +1799,7 @@ input:disabled {
   transform: scale(1.02);
 }
 
-/* Privacy Note */
+/* 隐私提示 */
 .privacy-note {
   display: flex;
   gap: 10px;
@@ -1701,7 +1828,7 @@ input:disabled {
   stroke-linejoin: round;
 }
 
-/* Sync Actions */
+/* 同步操作 */
 .sync-actions {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1725,7 +1852,7 @@ input:disabled {
   line-height: 1.5;
 }
 
-/* Sticky Settings Actions */
+/* 底部常驻保存按钮 */
 .settings-actions {
   position: sticky;
   bottom: -1px;
@@ -1795,7 +1922,7 @@ input:disabled {
   }
 }
 
-/* Options Mode Dedicated Styles */
+/* 独立设置页面 (Options Mode Dedicated Styles) */
 body[data-mode="options"] {
   width: 100%;
   min-width: 320px;

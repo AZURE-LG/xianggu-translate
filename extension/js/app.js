@@ -1042,7 +1042,7 @@ async function copyOutput() {
     setTimeout(() => {
       elements.copyButtonLabel.textContent = "复制";
       elements.copyButton.classList.remove("is-copied");
-    }, 1200);
+    }, 1500);
     updateStatus("已复制译文。");
   } catch {
     updateStatus("复制失败，请手动选择译文复制。", true);
@@ -1200,6 +1200,7 @@ async function applyTheme(previewPreference) {
     ? (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light")
     : preference;
   document.body.dataset.theme = resolved;
+  document.documentElement.dataset.theme = resolved;
   document.documentElement.classList.toggle("wa-dark", resolved === "dark");
   document.documentElement.classList.toggle("wa-light", resolved !== "dark");
   if (elements.themeToggleButton) {
