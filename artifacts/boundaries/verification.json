@@ -1,0 +1,134 @@
+{
+  "数据来源": "全部为本地测试输入与模拟服务，不代表真实翻译质量或远端服务可用性",
+  "长内容": "5001 字被阻止并说明删减数量；可接受的长文本通过键盘翻译，原文和译文各自滚动，无横向溢出",
+  "服务错误与重试": "模拟 HTTP 401 显示错误，原文保留；触屏点击重译后成功",
+  "键盘": "Ctrl+Enter 翻译；方向键与 Home 切换主题并同步选中、焦点状态",
+  "触屏点击范围": {
+    "#settingsButton": {
+      "宽": 44,
+      "高": 44
+    },
+    "#copyButton": {
+      "宽": 70,
+      "高": 44
+    },
+    "#retryButton": {
+      "宽": 44.00001525878906,
+      "高": 44
+    },
+    "#clearInputButton": {
+      "宽": 44,
+      "高": 44
+    },
+    "#primaryButton": {
+      "宽": 366.0000104904175,
+      "高": 44
+    }
+  },
+  "实测文字对比度": {
+    "light/graphite": {
+      "#input": 17.85,
+      "#output": 17.06,
+      "#charCount": 6.39,
+      "#autoModeHint": 6.39,
+      "#primaryButton": 5.17
+    },
+    "light/forest": {
+      "#input": 17.85,
+      "#output": 17.06,
+      "#charCount": 6.39,
+      "#autoModeHint": 6.39,
+      "#primaryButton": 5.48
+    },
+    "light/lake": {
+      "#input": 17.85,
+      "#output": 17.06,
+      "#charCount": 6.39,
+      "#autoModeHint": 6.39,
+      "#primaryButton": 5.93
+    },
+    "light/sunset": {
+      "#input": 17.85,
+      "#output": 17.06,
+      "#charCount": 6.39,
+      "#autoModeHint": 6.39,
+      "#primaryButton": 5.18
+    },
+    "light/lavender": {
+      "#input": 17.85,
+      "#output": 17.06,
+      "#charCount": 6.39,
+      "#autoModeHint": 6.39,
+      "#primaryButton": 7.1
+    },
+    "dark/graphite": {
+      "#input": 16.96,
+      "#output": 17.58,
+      "#charCount": 6.92,
+      "#autoModeHint": 6.92,
+      "#primaryButton": 5.28
+    },
+    "dark/forest": {
+      "#input": 16.96,
+      "#output": 17.58,
+      "#charCount": 6.92,
+      "#autoModeHint": 6.92,
+      "#primaryButton": 7.66
+    },
+    "dark/lake": {
+      "#input": 16.96,
+      "#output": 17.58,
+      "#charCount": 6.92,
+      "#autoModeHint": 6.92,
+      "#primaryButton": 9.07
+    },
+    "dark/sunset": {
+      "#input": 16.96,
+      "#output": 17.58,
+      "#charCount": 6.92,
+      "#autoModeHint": 6.92,
+      "#primaryButton": 8.59
+    },
+    "dark/lavender": {
+      "#input": 16.96,
+      "#output": 17.58,
+      "#charCount": 6.92,
+      "#autoModeHint": 6.92,
+      "#primaryButton": 7.14
+    }
+  },
+  "尺寸": [
+    {
+      "模式": "sidepanel",
+      "宽": 320,
+      "高": 650,
+      "结果": "无横向溢出，主要操作可达"
+    },
+    {
+      "模式": "sidepanel",
+      "宽": 520,
+      "高": 800,
+      "结果": "无横向溢出，主要操作可达"
+    },
+    {
+      "模式": "popup",
+      "宽": 460,
+      "高": 560,
+      "结果": "无横向溢出，主要操作可达"
+    },
+    {
+      "模式": "options",
+      "宽": 320,
+      "高": 700,
+      "结果": "无横向溢出，主要操作可达"
+    },
+    {
+      "模式": "options",
+      "宽": 860,
+      "高": 900,
+      "结果": "无横向溢出，主要操作可达"
+    }
+  ],
+  "页面脚本错误": [],
+  "结果": "全部通过"
+}

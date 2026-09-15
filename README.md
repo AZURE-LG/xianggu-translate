@@ -1,6 +1,6 @@
 # 香菇翻译
 
-香菇翻译是一款 Chrome / Edge 输入式翻译扩展。v0.4 在 Google 翻译式交互上引入本地 Web Awesome 组件体系，使用可访问的下拉菜单、按钮、开关和 Tooltip，并重新设计为中性画布、绿色输入端与紫色译文端。扩展不读取网页、不注入脚本，也不保存持久翻译历史；你输入的文本只会发送到自己配置的 OpenAI-compatible 服务商。可选的 WebDAV 功能可手动上传或下载设置。
+香菇翻译是一款 Chrome / Edge 输入式翻译扩展。界面使用本地 Web Awesome 组件，提供浅色、深色主题及五种颜色预设。翻译工作台保持原文和译文的位置稳定，设置按连接、偏好与同步连续分区。扩展不读取网页、不注入脚本，也不保存持久翻译历史；你输入的文本只会发送到自己配置的 OpenAI-compatible 服务商。可选的 WebDAV 功能可手动上传或下载设置。
 
 ## 项目状态
 
@@ -112,7 +112,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File tools\package-crx.ps1
 - Popup 中点击“侧边栏”可在支持 Chrome Side Panel 的浏览器中连续使用。
 - 在设置中启用 WebDAV 后，只需填写 WebDAV 服务地址、用户名和密码，可测试连接、上传本机配置或下载远端配置。
 - 扩展固定使用服务地址下的 `xianggu-translate/config.json`；目录不存在时通过 WebDAV `MKCOL` 创建。
-- 上传会直接覆盖远端文件，下载会直接覆盖本机配置，不再根据设备时间自动判断方向。请在操作前自行确认使用哪一份配置。
+- 上传与下载会在操作位置提示覆盖范围，确认后执行；可取消或按 Escape 返回。上传使用本机已保存设置，下载会替换本机设置及当前设置草稿。
 
 ## 隐私与权限
 
@@ -225,3 +225,13 @@ powershell -NoProfile -ExecutionPolicy Bypass -File tools\package.ps1
 ## 当前边界
 
 v0.4 是输入式翻译工具，不包含整页翻译、划词翻译、网页输入框回填、翻译历史、账号式云同步或 Firefox / Safari 支持；仅提供用户自带 WebDAV 的设置同步。
+
+## 动态交互验证
+
+执行 `python tools/browser-motion.py`，在隔离 Chromium 扩展内使用本地模拟服务逐项触发按钮、翻译状态、设置往返、模型菜单、主题指示器、同步展开及覆盖确认。脚本采集实际逐帧透明度、位置和高度，检查快速中断、重复操作、草稿保留、断网恢复及减少动态效果设置，并录制 `artifacts/motion/interaction-demo.webm`，结果写入 `artifacts/motion/verification.json`。
+
+设置返回时保留本次打开页面中的未保存输入；关闭扩展页面后不保留设置草稿。原文与译文仍按原有会话恢复机制保存。
+
+主题切换使用从触发位置展开的圆形过渡，连续操作会取消旧动画，按最后一次选择结束。系统要求减少动态效果时立即切换。运行 `python tools/browser-theme.py` 可验证并录制 `artifacts/theme/theme-demo.webm`。
+
+运行 `python tools/browser-boundaries.py` 可验证输入长度限制、长内容滚动、模拟服务错误与重试、触屏点击、键盘主题选择、五种配色在浅深主题下的主要文字对比及多尺寸布局。结果写入 `artifacts/boundaries/verification.json`。这些测试不会调用真实服务商，也不能代替实体触屏设备和真实服务的验收。

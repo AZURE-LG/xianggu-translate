@@ -124,7 +124,8 @@ class MockHandler(BaseHTTPRequestHandler):
                 self.wfile.write(f"data: {json.dumps(payload, ensure_ascii=False)}\n\n".encode("utf-8"))
                 self.wfile.flush()
                 if index < len(chunks) - 1:
-                    time.sleep(0.25)
+                    # 留出截图与真实点击的时间，避免响应完成与停止操作竞争。
+                    time.sleep(0.8)
             self.wfile.write(b"data: [DONE]\n\n")
         except (BrokenPipeError, ConnectionAbortedError, ConnectionResetError):
             return
@@ -408,7 +409,7 @@ async def main():
                 await page.screenshot(path=str(ARTIFACTS / "browser-model-picker.png"), full_page=True)
                 await page.click('.model-picker-option[data-model-id="mock-chat"]')
                 assert await page.input_value("#model") == "mock-chat"
-                assert not await page.locator("#modelPickerList").is_visible()
+                await page.locator("#modelPickerList").wait_for(state="hidden")
                 await page.click("#testTranslationButton")
                 await wait_until(test_translation_succeeded)
                 await page.screenshot(path=str(ARTIFACTS / "browser-settings.png"), full_page=True)
@@ -477,13 +478,13 @@ async def main():
                 await options_page.wait_for_timeout(180)
                 assert await options_page.get_attribute("body", "data-theme") == "dark"
                 assert await options_page.evaluate(
-                    "() => getComputedStyle(document.body).getPropertyValue('--surface-soft').trim() === '#313131'"
+                    "() => getComputedStyle(document.body).getPropertyValue('--surface-soft').trim() === '#1a2234'"
                 )
                 assert await options_page.evaluate(
-                    "() => getComputedStyle(document.querySelector('.color-preset[data-color-preset=\"graphite\"]')).backgroundColor === 'rgb(49, 49, 49)'"
+                    "() => getComputedStyle(document.querySelector('.color-preset[data-color-preset=\"graphite\"]')).backgroundColor === 'rgb(26, 34, 52)'"
                 )
                 assert await options_page.evaluate(
-                    "() => getComputedStyle(document.querySelector('#webDavUrl')).color === 'rgb(236, 236, 236)'"
+                    "() => getComputedStyle(document.querySelector('#webDavUrl')).color === 'rgb(248, 250, 252)'"
                 )
                 assert await options_page.evaluate(
                     """() => {
@@ -502,6 +503,7 @@ async def main():
                 await wait_until(webdav_test_succeeded)
                 await options_page.click("#webDavIncludeApiKey")
                 await options_page.click("#uploadWebDavButton")
+                await options_page.click("#confirmSyncButton")
                 await wait_until(webdav_upload_succeeded)
                 assert MockHandler.sync_document is not None
                 assert ("PROPFIND", "/webdav/xianggu-translate/") in MockHandler.requests
@@ -512,6 +514,7 @@ async def main():
                 MockHandler.sync_document["config"]["theme"] = "dark"
                 MockHandler.sync_document["config"]["apiKey"] = "remote-api-key"
                 await options_page.click("#downloadWebDavButton")
+                await options_page.click("#confirmSyncButton")
                 await wait_until(webdav_download_succeeded)
                 assert (await options_page.evaluate("async () => (await chrome.storage.local.get('config')).config.theme")) == "dark"
                 assert (await options_page.evaluate("async () => (await chrome.storage.local.get('config')).config.apiKey")) == "remote-api-key"
@@ -519,6 +522,7 @@ async def main():
                 MockHandler.sync_document["config"]["theme"] = "light"
                 MockHandler.sync_document["config"]["apiKey"] = "ignored-api-key"
                 await options_page.click("#downloadWebDavButton")
+                await options_page.click("#confirmSyncButton")
                 await wait_until(webdav_download_succeeded)
                 assert (await options_page.evaluate("async () => (await chrome.storage.local.get('config')).config.theme")) == "light"
                 assert (await options_page.evaluate("async () => (await chrome.storage.local.get('config')).config.apiKey")) == "remote-api-key"

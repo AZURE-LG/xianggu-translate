@@ -78,6 +78,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   state.ready = true;
   document.body.dataset.ready = "true";
   updateModeControls();
+  initializeMotion();
 });
 
 function collectElements() {
@@ -553,7 +554,9 @@ async function saveConfig(config, options = {}) {
 }
 
 function updateWebDavFormState() {
+  if (!elements.webDavEnabled.checked) cancelSyncConfirmation?.();
   const disabled = !elements.webDavEnabled.checked || state.settingsBusy;
+  revealElement(document.getElementById("syncFields"), elements.webDavEnabled.checked, true);
   elements.webDavUrl.disabled = disabled;
   elements.webDavUsername.disabled = disabled;
   elements.webDavPassword.disabled = disabled;
@@ -597,6 +600,7 @@ async function prepareWebDavTransfer() {
 }
 
 async function uploadWebDav() {
+  if (!(await confirmSyncTransfer("upload"))) return;
   const settings = await prepareWebDavTransfer();
   if (!settings) return;
   updateStatus("正在上传本机配置...");
@@ -612,6 +616,7 @@ async function uploadWebDav() {
 }
 
 async function downloadWebDav() {
+  if (!(await confirmSyncTransfer("download"))) return;
   const settings = await prepareWebDavTransfer();
   if (!settings) return;
   updateStatus("正在下载远端配置...");
@@ -671,7 +676,7 @@ function updateModelPickerState() {
 
 function openModelPicker() {
   if (!state.models.length) return;
-  const willOpen = elements.modelPickerList.hidden;
+  const willOpen = elements.modelPickerButton.getAttribute("aria-expanded") !== "true";
   if (!willOpen) {
     closeModelPicker();
     elements.model.focus();
@@ -680,7 +685,7 @@ function openModelPicker() {
   for (const option of elements.modelPickerList.querySelectorAll("[data-model-id]")) {
     option.setAttribute("aria-selected", String(option.dataset.modelId === elements.model.value));
   }
-  elements.modelPickerList.hidden = false;
+  revealElement(elements.modelPickerList, true);
   elements.modelPickerButton.setAttribute("aria-expanded", "true");
   const selectedOption = elements.modelPickerList.querySelector("[aria-selected='true']")
     ?? elements.modelPickerList.querySelector("[data-model-id]");
@@ -689,7 +694,7 @@ function openModelPicker() {
 
 function closeModelPicker() {
   if (!elements.modelPickerList) return;
-  elements.modelPickerList.hidden = true;
+  revealElement(elements.modelPickerList, false);
   elements.modelPickerButton?.setAttribute("aria-expanded", "false");
 }
 
@@ -812,6 +817,11 @@ function handleWorkerMessage(message) {
     state.running = false;
     setRunningState();
     setOutput(message.translation);
+    animateLabel(elements.primaryButtonLabel, "翻译完成");
+    clearTimeout(state.completeTimer);
+    state.completeTimer = setTimeout(() => {
+      if (!state.running) animateLabel(elements.primaryButtonLabel, "翻译");
+    }, 1600);
     state.lastSourceLanguage = message.sourceLanguage;
     updateDetectedLanguage();
     updateSwapState();
@@ -924,6 +934,7 @@ async function handleSettingsMessage(message) {
 
 function startTranslation(options = {}) {
   clearTimeout(state.debounceTimer);
+  elements.autoModeHint?.classList.remove("is-waiting");
   if (state.running) return;
 
   const text = options.retry ? state.lastRequestText : elements.input.value;
@@ -941,6 +952,7 @@ function startTranslation(options = {}) {
     return;
   }
 
+  clearTimeout(state.completeTimer);
   state.requestId += 1;
   state.activeRequestId = state.requestId;
   state.running = true;
@@ -975,7 +987,8 @@ function stopActiveRequest(statusMessage) {
 }
 
 function setRunningState() {
-  elements.primaryButtonLabel.textContent = state.running ? "停止" : "翻译";
+  animateLabel(elements.primaryButtonLabel, state.running ? "停止" : "翻译");
+  elements.output.setAttribute("aria-busy", String(state.running));
   elements.primaryButton.setAttribute("aria-label", state.running ? "停止翻译" : "开始翻译");
   elements.retryButton.disabled = state.running || !state.lastRequestText;
   elements.copyButton.disabled = !elements.output.textContent;
@@ -996,6 +1009,7 @@ function handleInput() {
 
 function scheduleAutoTranslate() {
   if (state.debounceTimer) clearTimeout(state.debounceTimer);
+  elements.autoModeHint?.classList.remove("is-waiting");
   if (!state.config?.autoTranslate) return;
 
   const text = elements.input.value;
@@ -1005,14 +1019,20 @@ function scheduleAutoTranslate() {
     return;
   }
 
+  elements.autoModeHint?.classList.add("is-waiting");
   state.debounceTimer = setTimeout(() => {
+    elements.autoModeHint?.classList.remove("is-waiting");
     if (!state.running) startTranslation();
   }, 1000);
 }
 
 function updateCharCount() {
   const length = countCodePoints(elements.input.value);
-  elements.charCount.textContent = `${length} / ${MAX_INPUT_LENGTH}`;
+  const overLimit = length > MAX_INPUT_LENGTH;
+  elements.charCount.textContent = overLimit
+    ? `超出 ${length - MAX_INPUT_LENGTH} 字，请删减`
+    : `${length} / ${MAX_INPUT_LENGTH}`;
+  elements.input.setAttribute("aria-invalid", String(overLimit));
   elements.charCount.classList.toggle("near-limit", length >= 4500 && length <= MAX_INPUT_LENGTH);
   elements.charCount.classList.toggle("over-limit", length > MAX_INPUT_LENGTH);
   elements.clearInputButton.hidden = length === 0;
@@ -1039,7 +1059,8 @@ async function copyOutput() {
     await navigator.clipboard.writeText(text);
     elements.copyButtonLabel.textContent = "已复制";
     elements.copyButton.classList.add("is-copied");
-    setTimeout(() => {
+    clearTimeout(state.copyTimer);
+    state.copyTimer = setTimeout(() => {
       elements.copyButtonLabel.textContent = "复制";
       elements.copyButton.classList.remove("is-copied");
     }, 1500);
@@ -1071,6 +1092,7 @@ async function pasteInput() {
 function selectThemeChoice(value, preview, event) {
   const choice = THEME_ORDER.includes(value) ? value : "system";
   elements.theme.value = choice;
+  elements.themeControl.style.setProperty("--selected-index", THEME_ORDER.indexOf(choice));
   for (const button of elements.themeControl.querySelectorAll("[data-theme-choice]")) {
     const selected = button.dataset.themeChoice === choice;
     button.setAttribute("aria-checked", String(selected));
@@ -1127,70 +1149,78 @@ function applyColorPreset(value) {
 
 async function toggleQuickTheme(event) {
   if (!state.config) return;
-  const nextTheme = document.body.dataset.theme === "dark" ? "light" : "dark";
+  const nextTheme = (requestedTheme ?? document.body.dataset.theme) === "dark" ? "light" : "dark";
   state.config.theme = nextTheme;
   selectThemeChoice(nextTheme, false);
-  await transitionTheme(nextTheme, event ?? elements.themeToggleButton);
-  await saveConfig(state.config);
+  const pending = transitionTheme(nextTheme, event ?? elements.themeToggleButton);
+  const revision = themeRevision;
+  await pending;
+  if (revision === themeRevision) await saveConfig(state.config);
 }
 
+let themeSnapshot;
+let themeAnimation;
+let themeRevision = 0;
+let requestedTheme;
 async function transitionTheme(targetChoice, trigger) {
-  const prefersReducedMotion = typeof window.matchMedia === "function"
-    && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-
-  if (typeof document.startViewTransition !== "function" || prefersReducedMotion) {
+  const revision = ++themeRevision;
+  requestedTheme = targetChoice;
+  themeAnimation?.cancel();
+  themeSnapshot?.remove();
+  if (reducedMotion()) {
     await applyTheme(targetChoice);
+    requestedTheme = null;
     return;
   }
-
-  let x = window.innerWidth / 2;
-  let y = window.innerHeight / 2;
-
-  if (trigger && typeof trigger === "object") {
-    if ("clientX" in trigger && "clientY" in trigger && trigger.clientX > 0 && trigger.clientY > 0) {
-      x = trigger.clientX;
-      y = trigger.clientY;
-    } else if (trigger instanceof HTMLElement) {
-      const rect = trigger.getBoundingClientRect();
-      x = rect.left + rect.width / 2;
-      y = rect.top + rect.height / 2;
+  const origin = trigger instanceof HTMLElement ? trigger : trigger?.currentTarget ?? elements.themeToggleButton;
+  const rect = origin.getBoundingClientRect();
+  const x = trigger?.clientX > 0 ? trigger.clientX : rect.left + rect.width / 2;
+  const y = trigger?.clientY > 0 ? trigger.clientY : rect.top + rect.height / 2;
+  const radius = Math.hypot(Math.max(x, innerWidth - x), Math.max(y, innerHeight - y));
+  // 冻结旧画面的视觉样式；真实页面持续接收触屏、鼠标和键盘操作。
+  const shell = document.querySelector(".app-shell");
+  const snapshot = shell.cloneNode(true);
+  const originals = [shell, ...shell.querySelectorAll("*")];
+  const copies = [snapshot, ...snapshot.querySelectorAll("*")];
+  const properties = ["display", "position", "box-sizing", "width", "height", "min-width", "min-height", "max-width", "max-height", "padding", "margin", "gap", "flex", "flex-direction", "align-items", "justify-content", "grid-template-columns", "grid-column", "overflow", "color", "background", "border", "border-radius", "box-shadow", "font", "line-height", "letter-spacing", "text-align", "white-space", "fill", "stroke", "opacity", "top", "right", "bottom", "left"];
+  originals.forEach((node, index) => {
+    const style = getComputedStyle(node);
+    properties.forEach(property => copies[index].style.setProperty(property, style.getPropertyValue(property)));
+    copies[index].style.setProperty("transition", "none", "important");
+    copies[index].style.setProperty("animation", "none", "important");
+    copies[index].removeAttribute("id");
+    for (const attribute of [...copies[index].attributes]) {
+      if (attribute.name.startsWith("data-")) copies[index].removeAttribute(attribute.name);
     }
-  } else if (elements.themeToggleButton) {
-    const rect = elements.themeToggleButton.getBoundingClientRect();
-    x = rect.left + rect.width / 2;
-    y = rect.top + rect.height / 2;
-  }
-
-  const endRadius = Math.hypot(
-    Math.max(x, window.innerWidth - x),
-    Math.max(y, window.innerHeight - y)
-  );
-
-  document.documentElement.classList.add("view-transition-active");
-  const transition = document.startViewTransition(async () => {
-    await applyTheme(targetChoice);
+    if ("value" in node) copies[index].value = node.value;
   });
-
+  const bodyStyle = getComputedStyle(document.body);
+  for (const property of bodyStyle) {
+    if (property.startsWith("--")) snapshot.style.setProperty(property, bodyStyle.getPropertyValue(property));
+  }
+  const bounds = shell.getBoundingClientRect();
+  Object.assign(snapshot.style, { position: "fixed", left: `${bounds.left}px`, top: `${bounds.top}px`, width: `${bounds.width}px`, height: `${bounds.height}px`, margin: "0", zIndex: "1000", pointerEvents: "none", background: bodyStyle.getPropertyValue("--app-bg") });
+  snapshot.classList.add("theme-snapshot");
+  snapshot.inert = true;
+  snapshot.setAttribute("aria-hidden", "true");
+  document.body.append(snapshot);
+  originals.forEach((node,index) => { copies[index].scrollTop=node.scrollTop; copies[index].scrollLeft=node.scrollLeft; });
+  themeSnapshot = snapshot;
+  await applyTheme(targetChoice);
+  const cx=x-bounds.left, cy=y-bounds.top;
+  const mask = r => `path(evenodd, "M -10000 -10000 H 10000 V 10000 H -10000 Z M ${cx-r} ${cy} a ${r} ${r} 0 1 0 ${2*r} 0 a ${r} ${r} 0 1 0 ${-2*r} 0 Z")`;
   try {
-    await transition.ready;
-    const animation = document.documentElement.animate(
-      {
-        clipPath: [
-          `circle(0px at ${x}px ${y}px)`,
-          `circle(${endRadius}px at ${x}px ${y}px)`,
-        ],
-      },
-      {
-        duration: 400,
-        easing: "cubic-bezier(0.16, 1, 0.3, 1)",
-        pseudoElement: "::view-transition-new(root)",
-      }
-    );
-    await animation.finished;
+    themeAnimation = snapshot.animate({ clipPath: [mask(.1), mask(radius)] }, { duration: 320, easing: "cubic-bezier(.2,.7,.2,1)", fill: "forwards" });
+    await themeAnimation.finished;
   } catch {
-    // Ignore interrupted transitions
+    // 连续切换时取消旧动画，由最后一次选择继续显示。
   } finally {
-    document.documentElement.classList.remove("view-transition-active");
+    snapshot.remove();
+    if (revision === themeRevision) {
+      themeSnapshot = null;
+      themeAnimation = null;
+      requestedTheme = null;
+    }
   }
 }
 
@@ -1217,13 +1247,12 @@ function updateBaseUrlWarning() {
 }
 
 function toggleSettings() {
+  cancelSyncConfirmation?.();
   const willShowSettings = elements.settings.hidden;
   if (willShowSettings) {
-    fillSettingsForm(state.config);
     showSettings();
-    elements.provider.focus();
+    elements.provider.focus({ preventScroll: true });
   } else {
-    fillSettingsForm(state.config);
     applyColorPreset(state.config.colorPreset);
     applyTheme();
     showTranslator();
@@ -1234,12 +1263,13 @@ function toggleSettings() {
 function showSettings() {
   const firstTime = !isConfigComplete(state.config);
   document.body.classList.add("settings-open");
-  elements.translator.hidden = true;
-  elements.settings.hidden = false;
+  switchWorkspace(elements.settings, elements.translator, 1);
   elements.settingsTitle.textContent = firstTime ? "开始连接" : "设置";
+  applyColorPreset(elements.colorPreset.value);
+  void applyTheme(elements.theme.value);
   elements.settingsIntro.textContent = firstTime
     ? "连接你自己的模型服务，不创建新账号。"
-    : "管理模型连接、翻译偏好与界面主题。";
+    : "返回时保留未保存的输入；保存后应用设置。";
   elements.saveSettingsButton.textContent = firstTime ? "保存并开始翻译" : "保存设置";
   if (state.mode !== "options") {
     elements.settingsButton.hidden = firstTime;
@@ -1250,9 +1280,9 @@ function showSettings() {
 }
 
 function showTranslator() {
+  cancelSyncConfirmation?.();
   document.body.classList.remove("settings-open");
-  elements.translator.hidden = false;
-  elements.settings.hidden = true;
+  switchWorkspace(elements.translator, elements.settings, -1);
   updateModelShortcut();
   elements.settingsButton.hidden = state.mode === "options";
   elements.settingsButton.classList.remove("is-back");
@@ -1267,7 +1297,6 @@ function updateModelShortcut() {
 }
 
 function openModelSettings() {
-  fillSettingsForm(state.config);
   showSettings();
   elements.model.focus();
 }
@@ -1340,6 +1369,7 @@ async function swapLanguages() {
 
 function clearTranslation() {
   clearTimeout(state.debounceTimer);
+  elements.autoModeHint?.classList.remove("is-waiting");
   if (state.running) stopActiveRequest("");
   elements.input.value = "";
   state.lastRequestText = "";
@@ -1387,7 +1417,7 @@ function updateStatus(message, isError = false) {
   clearTimeout(state.statusTimer);
   elements.status.textContent = message;
   elements.status.classList.toggle("error", isError);
-  if (message && !message.includes("正在")) {
+  if (message && !isError && !message.includes("正在")) {
     state.statusTimer = setTimeout(() => {
       if (elements.status.textContent !== message) return;
       elements.status.textContent = "";
@@ -1470,4 +1500,123 @@ async function openOptionsPage() {
   } catch {
     updateStatus("打开页面设置失败。", true);
   }
+}
+
+// 同一元素只保留一个动画，重复操作从当前画面继续。
+const motionJobs = new WeakMap();
+const reducedMotion = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+function animateLabel(element, text) {
+  if (element.textContent === text) return;
+  motionJobs.get(element)?.cancel();
+  element.textContent = text;
+  if (!state.ready || reducedMotion()) return;
+  motionJobs.set(element, element.animate([
+    { opacity: 0.35, transform: "translateY(5px)" },
+    { opacity: 1, transform: "translateY(0)" },
+  ], { duration: 180, easing: "ease-out" }));
+}
+
+function revealElement(element, visible, expand = false) {
+  if (!element) return;
+  if (element.dataset.visible === String(visible)) return;
+  element.dataset.visible = String(visible);
+  const style = getComputedStyle(element);
+  const fromOpacity = element.hidden ? 0 : Number(style.opacity);
+  const fromHeight = element.hidden ? 0 : element.getBoundingClientRect().height;
+  const fromTransform = element.hidden ? "translateY(-6px)" : style.transform;
+  motionJobs.get(element)?.cancel();
+  element.hidden = false;
+  element.inert = !visible;
+  if (!state.ready || reducedMotion()) {
+    element.hidden = !visible;
+    return;
+  }
+  const frames = expand
+    ? [{ height: `${fromHeight}px`, opacity: fromOpacity }, { height: visible ? `${element.scrollHeight}px` : "0px", opacity: visible ? 1 : 0 }]
+    : [{ opacity: fromOpacity, transform: fromTransform }, { opacity: visible ? 1 : 0, transform: visible ? "translateY(0)" : "translateY(-6px)" }];
+  const animation = element.animate(frames, { duration: expand ? 280 : 220, easing: "cubic-bezier(.2,.8,.2,1)" });
+  motionJobs.set(element, animation);
+  animation.onfinish = () => {
+    if (motionJobs.get(element) !== animation) return;
+    element.hidden = !visible;
+    motionJobs.delete(element);
+  };
+}
+
+let workspaceGhost;
+function switchWorkspace(incoming, outgoing, direction) {
+  if (!incoming.hidden) return;
+  const previousGhostStyle = workspaceGhost?.isConnected && workspaceGhost.dataset.workspace === incoming.id
+    ? getComputedStyle(workspaceGhost) : null;
+  const incomingStart = previousGhostStyle
+    ? { opacity: previousGhostStyle.opacity, transform: previousGhostStyle.transform }
+    : { opacity: 0, transform: `translateX(${direction * 14}px)` };
+  const outgoingStyle = getComputedStyle(outgoing);
+  const outgoingStart = { opacity: outgoingStyle.opacity, transform: outgoingStyle.transform };
+  workspaceGhost?.remove();
+  motionJobs.get(incoming)?.cancel();
+  if (state.ready && !reducedMotion() && !outgoing.hidden) {
+    const rect = outgoing.getBoundingClientRect();
+    workspaceGhost = outgoing.cloneNode(true);
+    workspaceGhost.dataset.workspace = outgoing.id;
+    workspaceGhost.removeAttribute("id");
+    workspaceGhost.querySelectorAll("[id]").forEach(node => node.removeAttribute("id"));
+    workspaceGhost.inert = true;
+    workspaceGhost.setAttribute("aria-hidden", "true");
+    workspaceGhost.classList.add("workspace-ghost");
+    Object.assign(workspaceGhost.style, { position: "fixed", left: `${rect.left}px`, top: `${rect.top}px`, width: `${rect.width}px`, height: `${rect.height}px`, margin: "0", zIndex: "5", pointerEvents: "none", overflow: "hidden" });
+    document.body.append(workspaceGhost);
+    workspaceGhost.scrollTop = outgoing.scrollTop;
+    const ghost = workspaceGhost;
+    ghost.animate([outgoingStart, { opacity: 0, transform: `translateX(${-direction * 14}px)` }], { duration: 220, easing: "ease-out" }).onfinish = () => ghost.remove();
+  }
+  outgoing.dataset.scrollTop = outgoing.scrollTop;
+  outgoing.hidden = true;
+  incoming.hidden = false;
+  incoming.scrollTop = Number(incoming.dataset.scrollTop || 0);
+  if (state.ready && !reducedMotion()) {
+    motionJobs.set(incoming, incoming.animate([incomingStart, { opacity: 1, transform: "translateX(0)" }], { duration: 240, easing: "cubic-bezier(.2,.8,.2,1)" }));
+  }
+}
+
+function initializeMotion() {
+  window.addEventListener("offline", () => updateStatus("网络已断开。原文已保留，连接恢复后可重新翻译。", true));
+  window.addEventListener("online", () => updateStatus("网络已恢复，可重新翻译。"));
+  if (!navigator.onLine) updateStatus("网络已断开，连接恢复后可翻译。", true);
+}
+
+let cancelSyncConfirmation;
+function confirmSyncTransfer(direction) {
+  if (state.settingsBusy) return Promise.resolve(false);
+  cancelSyncConfirmation?.();
+  const panel = document.getElementById("syncConfirmation");
+  const confirm = document.getElementById("confirmSyncButton");
+  const cancel = document.getElementById("cancelSyncButton");
+  const trigger = direction === "upload" ? elements.uploadWebDavButton : elements.downloadWebDavButton;
+  document.getElementById("syncConfirmationText").textContent = direction === "upload"
+    ? "将用本机已保存的设置覆盖远端文件。此操作无法撤销。"
+    : "将用远端设置替换本机设置和当前设置草稿。此操作无法撤销。";
+  confirm.textContent = direction === "upload" ? "确认上传覆盖" : "确认下载替换";
+  revealElement(panel, true, true);
+  cancel.focus({ preventScroll: true });
+  panel.scrollIntoView({ block: "nearest" });
+  return new Promise(resolve => {
+    const finish = accepted => {
+      confirm.removeEventListener("click", accept);
+      cancel.removeEventListener("click", reject);
+      panel.removeEventListener("keydown", escape);
+      cancelSyncConfirmation = null;
+      revealElement(panel, false, true);
+      trigger.focus({ preventScroll: true });
+      resolve(accepted);
+    };
+    const accept = () => finish(true);
+    const reject = () => finish(false);
+    const escape = event => { if (event.key === "Escape") { event.preventDefault(); reject(); } };
+    cancelSyncConfirmation = reject;
+    confirm.addEventListener("click", accept);
+    cancel.addEventListener("click", reject);
+    panel.addEventListener("keydown", escape);
+  });
 }
