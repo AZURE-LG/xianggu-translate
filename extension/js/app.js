@@ -1073,11 +1073,38 @@ async function copyOutput() {
 async function ensureClipboardPermission() {
   if (!globalThis.chrome?.permissions?.request) return true;
   try {
-    const has = await chrome.permissions.contains({ permissions: ["clipboardRead"] });
-    if (has) return true;
+    // 直接在点击调用栈中申请；已经授权时浏览器不会重复询问。
     return await chrome.permissions.request({ permissions: ["clipboardRead"] });
   } catch {
     return false;
+  }
+}
+
+async function readClipboardText() {
+  try {
+    return await navigator.clipboard.readText();
+  } catch (error) {
+    // 部分扩展页面无法使用异步剪贴板 API，使用已授权的粘贴命令读取纯文本。
+    const buffer = document.createElement("textarea");
+    buffer.setAttribute("aria-label", "读取剪贴板");
+    Object.assign(buffer.style, { position: "fixed", left: "-10000px", top: "0" });
+    document.body.append(buffer);
+    let text;
+    buffer.addEventListener("paste", event => {
+      if (!event.clipboardData) return;
+      text = event.clipboardData.getData("text/plain");
+      event.preventDefault();
+    });
+    try {
+      buffer.focus({ preventScroll: true });
+      const pasted = document.execCommand("paste");
+      if (text !== undefined) return text;
+      if (pasted) return buffer.value;
+      throw error;
+    } finally {
+      buffer.remove();
+      elements.input.focus({ preventScroll: true });
+    }
   }
 }
 
@@ -1090,7 +1117,8 @@ async function pasteInput() {
       updateStatus(`需要剪贴板授权，或直接按 ${pasteKey} 粘贴。`, true);
       return;
     }
-    const text = await navigator.clipboard.readText();
+    elements.input.focus({ preventScroll: true });
+    const text = await readClipboardText();
     if (!text) {
       updateStatus("剪贴板中没有可粘贴的文本。");
       return;
@@ -1180,24 +1208,35 @@ async function toggleQuickTheme(event) {
   const nextTheme = currentTheme === "dark" ? "light" : "dark";
   state.config.theme = nextTheme;
   selectThemeChoice(nextTheme, false);
-  const pending = transitionTheme(nextTheme, event ?? elements.themeToggleButton);
-  const revision = themeRevision;
-  await pending;
-  if (revision === themeRevision) await saveConfig(state.config);
+  void transitionTheme(nextTheme, event ?? elements.themeToggleButton);
+  await saveConfig(state.config);
 }
 
 let themeSnapshot;
 let themeAnimation;
 let themeRevision = 0;
 let requestedTheme;
-async function transitionTheme(targetChoice, trigger) {
-  const revision = ++themeRevision;
-  requestedTheme = targetChoice;
-  workspaceGhost?.remove();
+function cancelThemeTransition() {
+  ++themeRevision;
   themeAnimation?.cancel();
   themeSnapshot?.remove();
+  themeAnimation = null;
+  themeSnapshot = null;
+  requestedTheme = null;
+}
+
+async function transitionTheme(targetChoice, trigger) {
+  cancelThemeTransition();
+  const revision = themeRevision;
+  requestedTheme = targetChoice;
+  workspaceGhost?.remove();
+  // 页面淡入不能冻结在主题快照中，否则旧主题内容可能几乎透明。
+  for (const workspace of [elements.settings, elements.translator]) {
+    motionJobs.get(workspace)?.cancel();
+    motionJobs.delete(workspace);
+  }
   if (reducedMotion()) {
-    await applyTheme(targetChoice);
+    applyTheme(targetChoice);
     requestedTheme = null;
     return;
   }
@@ -1235,7 +1274,7 @@ async function transitionTheme(targetChoice, trigger) {
   document.body.append(snapshot);
   originals.forEach((node,index) => { copies[index].scrollTop=node.scrollTop; copies[index].scrollLeft=node.scrollLeft; });
   themeSnapshot = snapshot;
-  await applyTheme(targetChoice);
+  applyTheme(targetChoice);
   const cx=x-bounds.left, cy=y-bounds.top;
   const mask = r => `path(evenodd, "M -10000 -10000 H 10000 V 10000 H -10000 Z M ${cx-r} ${cy} a ${r} ${r} 0 1 0 ${2*r} 0 a ${r} ${r} 0 1 0 ${-2*r} 0 Z")`;
   try {
@@ -1253,7 +1292,7 @@ async function transitionTheme(targetChoice, trigger) {
   }
 }
 
-async function applyTheme(previewPreference) {
+function applyTheme(previewPreference) {
   const preference = previewPreference ?? state.config?.theme ?? "system";
   const resolved = preference === "system"
     ? (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light")
@@ -1574,8 +1613,7 @@ function revealElement(element, visible, expand = false) {
 let workspaceGhost;
 function switchWorkspace(incoming, outgoing, direction) {
   if (!incoming.hidden) return;
-  themeSnapshot?.remove();
-  themeAnimation?.cancel();
+  cancelThemeTransition();
   const previousGhostStyle = workspaceGhost?.isConnected && workspaceGhost.dataset.workspace === incoming.id
     ? getComputedStyle(workspaceGhost) : null;
   const incomingStart = previousGhostStyle

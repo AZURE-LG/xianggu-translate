@@ -54,6 +54,38 @@ async def main():
                 assert await page.locator('body').get_attribute('data-theme')=='light'
                 assert await page.locator('#themeToggleButton').evaluate('e=>document.activeElement===e')
                 report['键盘']='Enter 触发切换，焦点保持在按钮'
+                # 在页面淡入期间立即切换主题，快照中的可见工作区必须保持不透明。
+                for index in range(12):
+                    await page.evaluate("document.getElementById('settingsButton').click()")
+                    await page.wait_for_timeout([0, 25, 60, 110][index % 4])
+                    result = await page.evaluate("""() => {
+                        const target = document.body.dataset.theme === 'dark' ? 'light' : 'dark';
+                        if (!document.getElementById('settings').hidden) {
+                            document.querySelector(`#themeControl [data-theme-choice="${target}"]`).click();
+                        } else {
+                            document.getElementById('themeToggleButton').click();
+                        }
+                        const snapshot = document.querySelector('.theme-snapshot');
+                        const workspace = snapshot?.querySelector('.workspace:not([hidden])');
+                        return {snapshot: !!snapshot, opacity: workspace && getComputedStyle(workspace).opacity};
+                    }""")
+                    assert result == {'snapshot': True, 'opacity': '1'}, result
+                    await page.wait_for_timeout(30)
+                await page.wait_for_timeout(500)
+                assert await page.locator('.theme-snapshot').count() == 0
+                await page.evaluate("""() => {
+                    document.getElementById('themeToggleButton').click();
+                    document.getElementById('settingsButton').click();
+                    document.getElementById('themeToggleButton').click();
+                    document.getElementById('settingsButton').click();
+                    document.getElementById('themeToggleButton').click();
+                    document.getElementById('themeToggleButton').click();
+                }""")
+                await page.wait_for_timeout(500)
+                assert await page.locator('.theme-snapshot').count() == 0
+                stored = await page.evaluate("async () => (await chrome.storage.local.get('config')).config.theme")
+                assert stored == await page.locator('body').get_attribute('data-theme')
+                report['页面往返切换'] = '十二次交替切换，快照不透明且最终主题已保存'
                 await page.emulate_media(reduced_motion='reduce')
                 await click(); await page.wait_for_timeout(100)
                 assert await page.locator('body').get_attribute('data-theme')=='dark'
